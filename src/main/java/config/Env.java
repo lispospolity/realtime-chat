@@ -10,19 +10,23 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Env {
-    private List<String> lines;
+    private final List<String> lines;
+    private Path env = Paths.get(".env");
+    private Path exampleEnv = Paths.get(".env.example");
 
     public Env() throws IOException {
         lines = initLines();
     }
+    public Env(Path env, Path exampleEnv) throws IOException {
+        this.env = env;
+        this.exampleEnv = exampleEnv;
+        lines = initLines();
+    }
 
     private List<String> initLines() throws IOException {
-        Path filePath = Paths.get(".env");
-        Path exampleFilePath = Paths.get(".env.example");
+        if (!Files.exists(env)) Files.copy(exampleEnv, env);
 
-        if (!Files.exists(filePath)) Files.copy(exampleFilePath, filePath);
-        return Files.readAllLines(filePath);
-
+        return Files.readAllLines(env);
     }
 
     public String get(String prompt) {
