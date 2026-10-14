@@ -29,21 +29,23 @@ public class UserRepository {
     public void delete(String id) throws SQLException {
         Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
-                DELETE FROM users WHERE id=?;
+                DELETE FROM users WHERE id = ?;
                 """);
         statement.setString(1, id);
         int rowsInserted = statement.executeUpdate();
     }
 
-    public boolean nameExists(String name) throws SQLException {
-        Connection connection = dataSource.getConnection();
+    public String getId(String name) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
-                SELECT FROM users WHERE username = ?;
-                """);
-        statement.setString(1, name);
-        ResultSet resultSet = statement.executeQuery();
-        return resultSet.next();
+                SELECT id FROM users WHERE username = ?;
+                """)
+        ) {
+            statement.setString(1, name);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getString("id");
+            return null;
+        }
     }
-
 }
 
