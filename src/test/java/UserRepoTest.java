@@ -1,3 +1,4 @@
+import com.zaxxer.hikari.HikariDataSource;
 import config.AppConfig;
 import config.Env;
 import database.DataSourceFactory;
@@ -29,24 +30,24 @@ public class UserRepoTest {
 
     @Test
     void exists() throws SQLException {
-        Assertions.assertNotNull(testRepo.getId("testUser"));
+        Assertions.assertNotNull(testRepo.getId("repo_testUser"));
     }
 
     @Test
     void doesntExist() throws SQLException {
-        Assertions.assertNull(testRepo.getId("nonexistentUser"));
+        Assertions.assertNull(testRepo.getId("repo_nonexistentUser"));
     }
 
     @Test
     void getId() throws SQLException {
-        Assertions.assertEquals("testId", testRepo.getId("testUser"));
+        Assertions.assertEquals("repo_testId", testRepo.getId("repo_testUser"));
     }
 
     @Test
     void newUser() throws SQLException {
-        String username = "newTestUser";
+        String username = "repo_newTestUser";
         testRepo.create(
-                "newTestId",
+                "repo_newTestId",
                 username,
                 "qwertyuiop",
                 System.currentTimeMillis()
@@ -56,19 +57,21 @@ public class UserRepoTest {
 
     @Test
     void deleteUser() throws SQLException {
-        testRepo.delete("deleteId");
-        Assertions.assertNull(testRepo.getId("deleteMe"));
+        testRepo.delete("repo_deleteId");
+        Assertions.assertNull(testRepo.getId("repo_deleteMe"));
     }
 
     @AfterAll
     static void restoreDatabase() throws SQLException{
         UserRepository testRepo = new UserRepository(dataSource);
         testRepo.create(
-                "deleteId",
-                "deleteMe",
+                "repo_deleteId",
+                "repo_deleteMe",
                 "testhash_!@#$",
                 0L
                 );
-        testRepo.delete("newTestId");
+        testRepo.delete("repo_newTestId");
+
+        if (dataSource instanceof HikariDataSource hds) hds.close();
     }
 }
