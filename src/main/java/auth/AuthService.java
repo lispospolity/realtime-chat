@@ -47,7 +47,7 @@ public class AuthService {
     public Result<?> register(String username, String password) {
         boolean userExists;
         try {
-            userExists = userRepo.userExists(username);
+            userExists = userRepo.nameExists(username);
         } catch (SQLException ex) {
             return serverError(ex);
         }

@@ -26,15 +26,24 @@ public class UserRepository {
         int rowsInserted = statement.executeUpdate();
     }
 
-
-    public boolean userExists(String name) throws SQLException {
+    public void delete(String id) throws SQLException {
         Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
-                SELECT FROM users WHERE username = ?
+                DELETE FROM users WHERE id=?;
+                """);
+        statement.setString(1, id);
+        int rowsInserted = statement.executeUpdate();
+    }
+
+    public boolean nameExists(String name) throws SQLException {
+        Connection connection = dataSource.getConnection();
+        PreparedStatement statement = connection.prepareStatement("""
+                SELECT FROM users WHERE username = ?;
                 """);
         statement.setString(1, name);
         ResultSet resultSet = statement.executeQuery();
         return resultSet.next();
     }
+
 }
 
