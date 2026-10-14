@@ -2,6 +2,7 @@ package auth;
 
 import config.AppConfig;
 
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.Base64;
@@ -11,6 +12,10 @@ import database.repository.SessionRepository;
 import database.repository.UserRepository;
 import logging.Debug;
 import org.mindrot.jbcrypt.BCrypt;
+import utils.TokenUtils;
+
+import static utils.TokenUtils.generateToken;
+import static utils.TokenUtils.hashToken;
 
 public class AuthService {
     private final int minNameLength;
@@ -18,7 +23,8 @@ public class AuthService {
     private final int minPasswordLength;
     private final int maxPasswordLength;
 
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final long tokenExpiryInMillis;
+
     private final UserRepository userRepo;
     private final SessionRepository sessionRepo;
 
@@ -27,30 +33,59 @@ public class AuthService {
         maxNameLength = appConfig.maxNameLength;
         minPasswordLength = appConfig.minPasswordLength;
         maxPasswordLength = appConfig.maxPasswordLength;
+        tokenExpiryInMillis = appConfig.tokenExpiryInMillis;
 
         this.userRepo = userRepository;
         this.sessionRepo = sessionRepository;
     }
 
     public Result<?> login(String username, String password) {
+        String id;
+        String hash;
+        try {
+            id = userRepo.getId(username);
+            if (id == null) {
+                var response = new ErrorResponse(
+                        false,
+                        "Username or password is incorrect");
+                return new Result<ErrorResponse>(400, response);
+            }
+            hash = userRepo.getPassword(id);
+        } catch (SQLException ex) { return serverError(ex); }
+
+        if (hash == null) return serverError(new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
+
+        if (!BCrypt.checkpw(password, hash)) {
+            var response = new ErrorResponse(
+                    false,
+                    "Username or password is incorrect");
+            return new Result<ErrorResponse>(400, response);
+        }
 
         String token = generateToken();
+        byte[] hashedToken;
+        try {
+            hashedToken = hashToken(token);
+        } catch (NoSuchAlgorithmException ex) { return serverError(ex); }
+
+        long timeNow = System.currentTimeMillis();
+        try {
+            sessionRepo.newSession(id, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new LoginResponse(
-                false,
+                true,
                 token,
                 "Login successful."
         );
-        return new Result<LoginResponse>(201, response);
+        return new Result<LoginResponse>(200, response);
     }
 
     public Result<?> register(String username, String password) {
         boolean userExists;
         try {
             userExists = userRepo.getId(username) != null;
-        } catch (SQLException ex) {
-            return serverError(ex);
-        }
+        } catch (SQLException ex) { return serverError(ex); }
 
         if (userExists) {
             var response = new ErrorResponse(
@@ -81,9 +116,7 @@ public class AuthService {
 
         try {
             userRepo.create(userId, username, hash, System.currentTimeMillis());
-        } catch (SQLException ex) {
-            return serverError(ex);
-        }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new RegisterResponse(
                 true,
@@ -94,14 +127,6 @@ public class AuthService {
 
 
 
-    private String generateToken() {
-        byte[] bytes = new byte[32];
-        secureRandom.nextBytes(bytes);
-
-        return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(bytes);
-    }
     private Result<?> serverError(Exception ex) {
         Debug.log(ex.toString());
 

@@ -5,6 +5,7 @@ public class AppConfig {
     public Integer maxNameLength = 100;
     public Integer minPasswordLength = 8;
     public Integer maxPasswordLength = 20;
+    public Long tokenExpiryInMillis = 86_400_000L;
 
     public String databaseUrl;
     public String databaseUser;
@@ -29,6 +30,9 @@ public class AppConfig {
         );
         maxPasswordLength = Integer.parseInt(
                 env.getOrDefault("MAX_PASSWORD_LENGTH", maxPasswordLength.toString())
+        );
+        tokenExpiryInMillis = Long.parseLong(
+                env.getOrDefault("CLIENT_TOKENS_EXPIRY_IN_MILLIS", tokenExpiryInMillis.toString())
         );
 
         databaseUrl = env.getRequired("JDBC_URL");

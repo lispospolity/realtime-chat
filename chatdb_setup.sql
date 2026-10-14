@@ -9,7 +9,7 @@ CREATE DATABASE IF NOT EXISTS chat_test
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
--- 2. Create users table in both databases
+-- 2. Create users table and sessions table in both databases
 
 CREATE TABLE IF NOT EXISTS chat.users (
     id        VARCHAR(36)  NOT NULL PRIMARY KEY,
@@ -27,8 +27,22 @@ CREATE TABLE IF NOT EXISTS chat_test.users (
     CONSTRAINT uq_users_username UNIQUE (username)
 );
 
+CREATE TABLE IF NOT EXISTS chat.user_sessions (
+    id         VARCHAR(36)  NOT NULL PRIMARY KEY,
+    sesh_key   BINARY(32)   NOT NULL,
+    created_at BIGINT      NOT NULL,
+    expires_at BIGINT
+);
 
--- 3. Insert test users into chat_test
+CREATE TABLE IF NOT EXISTS chat_test.user_sessions (
+    id         VARCHAR(36)  NOT NULL PRIMARY KEY,
+    sesh_key   BINARY(32)   NOT NULL,
+    created_at BIGINT      NOT NULL,
+    expires_at BIGINT
+);
+
+
+-- 3. Insert test users into chat_test.users
 
 INSERT INTO chat_test.users (id, username, password, createdat)
 VALUES
