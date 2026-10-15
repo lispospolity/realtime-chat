@@ -90,24 +90,39 @@ public class SeshRepoTest {
     }
 
     @Test
-    void renewSessionBySessionId() throws SQLException {
-        Long firstExpirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
-
-        testRepo.newSession(
-                "repo_existingSessionId",
-                "repo_testId",
-                testTokenHash,
-                System.currentTimeMillis(),
-                System.currentTimeMillis()+50000
-        );
-        Long expirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
-
-        Assertions.assertNotNull(firstExpirationDate);
-        boolean renewedSession = expirationDate > System.currentTimeMillis() && !firstExpirationDate.equals(expirationDate);
-
-        Assertions.assertTrue(renewedSession);
-
+    void handleSessionIdConflict() {
         cleanupNeeded = true;
+
+        Assertions.assertThrows(
+                SQLException.class,
+                () -> testRepo.newSession(
+                        "repo_existingSessionId",
+                        "repo_testId",
+                        testTokenHash,
+                        System.currentTimeMillis(),
+                        System.currentTimeMillis()+50000
+                )
+        );
+
+        cleanupNeeded = false;
+    }
+
+    @Test
+    void handleSessionHashConflict() {
+        cleanupNeeded = true;
+
+        Assertions.assertThrows(
+                SQLException.class,
+                () -> testRepo.newSession(
+                        "repo_newSessionId",
+                        "repo_testId",
+                        startingTokenHash,
+                        System.currentTimeMillis(),
+                        System.currentTimeMillis()+50000
+                )
+        );
+
+        cleanupNeeded = false;
     }
 
     @Test
@@ -134,6 +149,8 @@ public class SeshRepoTest {
     void cleanup() throws SQLException {
         if (!cleanupNeeded) return;
         testRepo.deleteSessionByToken(testTokenHash);
+        testRepo.deleteSessionByToken(startingTokenHash);
+
         testRepo.newSession(
                 "repo_existingSessionId",
                 "repo_testId",

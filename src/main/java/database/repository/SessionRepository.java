@@ -17,12 +17,7 @@ public class SessionRepository {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      INSERT INTO user_sessions(session_id, user_id, sesh_key, created_at, expires_at)
-                     VALUES(?, ?, ?, ?, ?)
-                     ON DUPLICATE KEY UPDATE
-                     user_id    = ?,
-                     sesh_key   = ?,
-                     created_at = ?,
-                     expires_at  = ?;
+                     VALUES(?, ?, ?, ?, ?);
                      """)
         ) {
             statement.setString(1, sessionId);
@@ -30,11 +25,6 @@ public class SessionRepository {
             statement.setBytes(3, key);
             statement.setLong(4, createdAt);
             statement.setLong(5, expiresAt);
-
-            statement.setString(6, userId);
-            statement.setBytes(7, key);
-            statement.setLong(8, createdAt);
-            statement.setLong(9, expiresAt);
 
             statement.executeUpdate();
         }
