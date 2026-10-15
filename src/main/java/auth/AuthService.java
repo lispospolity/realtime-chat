@@ -48,9 +48,9 @@ public class AuthService {
                 return new Result<ErrorResponse>(400, response);
             }
             hash = userRepo.getPassword(userId);
-        } catch (SQLException ex) { return serverError(ex); }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
-        if (hash == null) return serverError(new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
+        if (hash == null) return serverError(500, new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
 
         if (!BCrypt.checkpw(password, hash)) {
             var response = new ErrorResponse(
@@ -63,13 +63,13 @@ public class AuthService {
         byte[] hashedToken;
         try {
             hashedToken = hashToken(token);
-        } catch (NoSuchAlgorithmException ex) { return serverError(ex); }
+        } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
         String sessionId = UUID.randomUUID().toString();
 
         long timeNow = System.currentTimeMillis();
         try {
             sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
-        } catch (SQLException ex) { return serverError(ex); }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new LoginResponse(
                 true,
@@ -83,7 +83,7 @@ public class AuthService {
         boolean userExists;
         try {
             userExists = userRepo.getId(username) != null;
-        } catch (SQLException ex) { return serverError(ex); }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
         if (userExists) {
             var response = new ErrorResponse(
@@ -114,7 +114,7 @@ public class AuthService {
 
         try {
             userRepo.create(userId, username, hash, System.currentTimeMillis());
-        } catch (SQLException ex) { return serverError(ex); }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new RegisterResponse(
                 true,
@@ -125,12 +125,12 @@ public class AuthService {
 
 
 
-    private Result<?> serverError(Exception ex) {
+    private Result<?> serverError(int httpCode, Exception ex) {
         Debug.log(ex.toString());
 
         var response = new ErrorResponse(
                 false,
                 "Internal Server Error");
-        return new Result<ErrorResponse>(500, response);
+        return new Result<ErrorResponse>(httpCode, response);
     }
 }
