@@ -3,16 +3,13 @@ package auth;
 import config.AppConfig;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.Base64;
 import java.util.UUID;
 
 import database.repository.SessionRepository;
 import database.repository.UserRepository;
 import logging.Debug;
 import org.mindrot.jbcrypt.BCrypt;
-import utils.TokenUtils;
 
 import static utils.TokenUtils.generateToken;
 import static utils.TokenUtils.hashToken;
