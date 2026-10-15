@@ -37,17 +37,17 @@ public class AuthService {
     }
 
     public Result<?> login(String username, String password) {
-        String id;
+        String userId;
         String hash;
         try {
-            id = userRepo.getId(username);
-            if (id == null) {
+            userId = userRepo.getId(username);
+            if (userId == null) {
                 var response = new ErrorResponse(
                         false,
                         "Username or password is incorrect");
                 return new Result<ErrorResponse>(400, response);
             }
-            hash = userRepo.getPassword(id);
+            hash = userRepo.getPassword(userId);
         } catch (SQLException ex) { return serverError(ex); }
 
         if (hash == null) return serverError(new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
@@ -64,10 +64,11 @@ public class AuthService {
         try {
             hashedToken = hashToken(token);
         } catch (NoSuchAlgorithmException ex) { return serverError(ex); }
+        String sessionId = UUID.randomUUID().toString();
 
         long timeNow = System.currentTimeMillis();
         try {
-            sessionRepo.newSession(id, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
+            sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
         } catch (SQLException ex) { return serverError(ex); }
 
         var response = new LoginResponse(

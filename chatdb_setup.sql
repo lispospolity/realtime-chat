@@ -28,21 +28,31 @@ CREATE TABLE IF NOT EXISTS chat_test.users (
 );
 
 CREATE TABLE IF NOT EXISTS chat.user_sessions (
-    id         VARCHAR(36)  NOT NULL PRIMARY KEY,
+    session_id VARCHAR(36)  NOT NULL PRIMARY KEY,
+    user_id    VARCHAR(36)  NOT NULL,
     sesh_key   BINARY(32)   NOT NULL,
-    created_at BIGINT      NOT NULL,
-    expires_at BIGINT
+    created_at BIGINT       NOT NULL,
+    expires_at BIGINT,
+    CONSTRAINT uq_user_sessions_sesh_key
+    UNIQUE (sesh_key),
+    CONSTRAINT fk_user_sessions_user
+    FOREIGN KEY (user_id) REFERENCES chat.users(id);
 );
 
 CREATE TABLE IF NOT EXISTS chat_test.user_sessions (
-    id         VARCHAR(36)  NOT NULL PRIMARY KEY,
+    session_id VARCHAR(36)  NOT NULL PRIMARY KEY,
+    user_id    VARCHAR(36)  NOT NULL,
     sesh_key   BINARY(32)   NOT NULL,
-    created_at BIGINT      NOT NULL,
-    expires_at BIGINT
+    created_at BIGINT       NOT NULL,
+    expires_at BIGINT,
+    CONSTRAINT uq_user_sessions_sesh_key
+    UNIQUE (sesh_key),
+    CONSTRAINT fk_user_sessions_user_test
+    FOREIGN KEY (user_id) REFERENCES chat_test.users(id);
 );
 
 
--- 3. Insert test users into chat_test.users
+-- 3. Insert test users into chat_test.users and chat_test.user_sessions
 
 INSERT INTO chat_test.users (id, username, password, createdat)
 VALUES
@@ -62,6 +72,16 @@ VALUES
     'repo_testId',
     'repo_testUser',
     'qwertyuiop',
+    0
+);
+
+INSERT INTO chat_test.user_sessions (session_id, user_id, sesh_key, created_at, expires_at)
+VALUES
+(
+    'repo_existingSessionId',
+    'repo_testId',
+    'UNHEX("6D970874D0DB767A7058798973F22CF6589601EDAB57996312F2EF7B56E5584D")',
+    1791977343811,
     0
 );
 

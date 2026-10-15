@@ -1,0 +1,146 @@
+import config.AppConfig;
+import config.Env;
+import database.DataSourceFactory;
+import database.repository.SessionRepository;
+import org.junit.jupiter.api.*;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+
+public class SeshRepoTest {
+    private final static Path testEnvDir = Paths.get("src/test/resources/.env.db.test");
+    private static DataSource dataSource;
+    private SessionRepository testRepo;
+
+    private boolean cleanupNeeded = false;
+
+    byte[] startingTokenHash = {
+            (byte) 0x6D, (byte) 0x97, (byte) 0x08, (byte) 0x74,
+            (byte) 0xD0, (byte) 0xDB, (byte) 0x76, (byte) 0x7A,
+            (byte) 0x70, (byte) 0x58, (byte) 0x79, (byte) 0x89,
+            (byte) 0x73, (byte) 0xF2, (byte) 0x2C, (byte) 0xF6,
+            (byte) 0x58, (byte) 0x96, (byte) 0x01, (byte) 0xED,
+            (byte) 0xAB, (byte) 0x57, (byte) 0x99, (byte) 0x63,
+            (byte) 0x12, (byte) 0xF2, (byte) 0xEF, (byte) 0x7B,
+            (byte) 0x56, (byte) 0xE5, (byte) 0x58, (byte) 0x4D
+    };
+
+    byte[] testTokenHash = {
+            (byte) 0xBA, (byte) 0x78, (byte) 0x16, (byte) 0xBF,
+            (byte) 0x8F, (byte) 0x01, (byte) 0xCF, (byte) 0xEA,
+            (byte) 0x41, (byte) 0x41, (byte) 0x40, (byte) 0xDE,
+            (byte) 0x5D, (byte) 0xAE, (byte) 0x22, (byte) 0x23,
+            (byte) 0xB0, (byte) 0x03, (byte) 0x61, (byte) 0xA3,
+            (byte) 0x96, (byte) 0x17, (byte) 0x7A, (byte) 0x9C,
+            (byte) 0xB4, (byte) 0x10, (byte) 0xFF, (byte) 0x61,
+            (byte) 0xF2, (byte) 0x00, (byte) 0x15, (byte) 0xAD
+    };
+
+    @BeforeAll
+    static void setupDatabase() throws IOException {
+        Env env = new Env(testEnvDir, null);
+        AppConfig testConfig = new AppConfig(env);
+        dataSource = DataSourceFactory.create(testConfig);
+    }
+
+    @BeforeEach
+    void setupRepo() {
+        testRepo = new SessionRepository(dataSource);
+    }
+
+    @Test
+    void getSessionIdBySessionKey() throws SQLException {
+        String sessionId = testRepo.getSessionIdBySessionKey(startingTokenHash);
+
+        Assertions.assertEquals("repo_existingSessionId", sessionId);
+    }
+
+    @Test
+    void getExpirationDateBySessionKey() throws SQLException {
+        Long expirationDate = testRepo.getSessionExpirationDate(startingTokenHash);
+
+        Assertions.assertEquals(0L, expirationDate);
+    }
+
+    @Test
+    void getExpirationDateById() throws SQLException {
+        Long expirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
+
+        Assertions.assertEquals(0L, expirationDate);
+    }
+
+
+    @Test
+    void newSession() throws SQLException {
+        testRepo.newSession(
+                "repo_newSessionId",
+                "repo_testId",
+                testTokenHash,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()+50000
+        );
+        String resultId = testRepo.getSessionIdBySessionKey(testTokenHash);
+
+        Assertions.assertEquals("repo_newSessionId", resultId);
+
+        cleanupNeeded = true;
+    }
+
+    @Test
+    void renewSessionBySessionId() throws SQLException {
+        Long firstExpirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
+
+        testRepo.newSession(
+                "repo_existingSessionId",
+                "repo_testId",
+                testTokenHash,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()+50000
+        );
+        Long expirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
+
+        Assertions.assertNotNull(firstExpirationDate);
+        boolean renewedSession = expirationDate > System.currentTimeMillis() && !firstExpirationDate.equals(expirationDate);
+
+        Assertions.assertTrue(renewedSession);
+
+        cleanupNeeded = true;
+    }
+
+    @Test
+    void deleteSessionBySessionKey() throws SQLException {
+        testRepo.deleteSessionByToken(startingTokenHash);
+
+        String userId = testRepo.getUserIdBySessionKey(startingTokenHash);
+        Assertions.assertNull(userId);
+
+        cleanupNeeded = true;
+    }
+
+    @Test
+    void deleteSessionsByUserId() throws SQLException {
+        testRepo.deleteSessionsByUserId("repo_testId");
+
+        String sessionId = testRepo.getSessionIdBySessionKey(startingTokenHash);
+        Assertions.assertNull(sessionId);
+
+        cleanupNeeded = true;
+    }
+
+    @AfterEach
+    void cleanup() throws SQLException {
+        if (!cleanupNeeded) return;
+        testRepo.deleteSessionByToken(testTokenHash);
+        testRepo.newSession(
+                "repo_existingSessionId",
+                "repo_testId",
+                startingTokenHash,
+                System.currentTimeMillis(),
+                0L
+        );
+    }
+
+}
