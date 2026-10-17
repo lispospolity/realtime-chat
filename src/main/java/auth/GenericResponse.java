@@ -1,6 +1,6 @@
 package auth;
 
-public record RegisterResponse(
+public record GenericResponse(
         boolean success,
         String message
 ) {}

@@ -116,11 +116,11 @@ public class AuthService {
             userRepo.create(userId, username, hash, System.currentTimeMillis());
         } catch (SQLException ex) { return serverError(500, ex); }
 
-        var response = new RegisterResponse(
+        var response = new GenericResponse(
                 true,
                 "Account successfully made."
         );
-        return new Result<RegisterResponse>(201, response);
+        return new Result<GenericResponse>(201, response);
     }
 
 
