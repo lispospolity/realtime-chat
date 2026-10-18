@@ -163,6 +163,7 @@ public class SeshRepoTest {
         if (!cleanupNeeded) return;
         testRepo.deleteSessionByToken(newTokenHash);
         testRepo.deleteSessionByToken(existingTokenHash);
+        testRepo.deleteSessionByToken(neverExpiringHash);
 
         testRepo.newSession(
                 "repo_existingSessionId",
@@ -170,6 +171,13 @@ public class SeshRepoTest {
                 existingTokenHash,
                 System.currentTimeMillis(),
                 0L
+        );
+        testRepo.newSession(
+                "repo_neverExpires",
+                "repo_testId",
+                neverExpiringHash,
+                System.currentTimeMillis(),
+                null
         );
     }
 

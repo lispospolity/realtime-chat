@@ -1,10 +1,7 @@
 package database.repository;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class SessionRepository {
     private final DataSource dataSource;
@@ -13,7 +10,7 @@ public class SessionRepository {
         this.dataSource = dataSource;
     }
 
-    public void newSession(String sessionId, String userId, byte[] key, long createdAt, long expiresAt) throws SQLException {
+    public void newSession(String sessionId, String userId, byte[] key, long createdAt, Long expiresAt) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      INSERT INTO user_sessions(session_id, user_id, sesh_key, created_at, expires_at)
@@ -24,7 +21,8 @@ public class SessionRepository {
             statement.setString(2, userId);
             statement.setBytes(3, key);
             statement.setLong(4, createdAt);
-            statement.setLong(5, expiresAt);
+            if (expiresAt == null) statement.setNull(5, Types.BIGINT);
+            else statement.setLong(5, expiresAt);
 
             statement.executeUpdate();
         }
