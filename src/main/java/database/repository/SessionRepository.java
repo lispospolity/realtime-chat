@@ -82,30 +82,22 @@ public class SessionRepository {
         }
     }
 
-    public Long getSessionExpirationDate(byte[] sessionKey) throws SQLException {
+    public boolean tokenExpired(byte[] sessionKey, Long timeNow) throws SQLException {
         try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                    SELECT expires_at FROM user_sessions WHERE sesh_key = ?;
+            PreparedStatement statement = connection.prepareStatement("""
+                    SELECT * FROM user_sessions WHERE
+                    sesh_key = ?
+                    AND (
+                    expires_at IS NULL
+                    OR expires_at > ?
+                    );
                     """)
         ) {
             statement.setBytes(1, sessionKey);
+            statement.setLong(2, timeNow);
 
             ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getLong("expires_at");
-            return 0L;
-        }
-    }
-    public Long getSessionExpirationDate(String sessionId) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                    SELECT expires_at FROM user_sessions WHERE session_id = ?;
-                    """)
-        ) {
-            statement.setString(1, sessionId);
-
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getLong("expires_at");
-            return 0L;
+            return !resultSet.next();
         }
     }
 }

@@ -1,7 +1,8 @@
+package database;
+
 import com.zaxxer.hikari.HikariDataSource;
 import config.AppConfig;
 import config.Env;
-import database.DataSourceFactory;
 import database.repository.UserRepository;
 import org.junit.jupiter.api.*;
 

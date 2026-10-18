@@ -1,6 +1,8 @@
+package database;
+
+import com.zaxxer.hikari.HikariDataSource;
 import config.AppConfig;
 import config.Env;
-import database.DataSourceFactory;
 import database.repository.SessionRepository;
 import org.junit.jupiter.api.*;
 
@@ -17,7 +19,7 @@ public class SeshRepoTest {
 
     private boolean cleanupNeeded = false;
 
-    byte[] startingTokenHash = {
+    byte[] existingTokenHash = {
             (byte) 0x6D, (byte) 0x97, (byte) 0x08, (byte) 0x74,
             (byte) 0xD0, (byte) 0xDB, (byte) 0x76, (byte) 0x7A,
             (byte) 0x70, (byte) 0x58, (byte) 0x79, (byte) 0x89,
@@ -28,7 +30,18 @@ public class SeshRepoTest {
             (byte) 0x56, (byte) 0xE5, (byte) 0x58, (byte) 0x4D
     };
 
-    byte[] testTokenHash = {
+    byte[] neverExpiringHash = {
+            (byte) 0x6D, (byte) 0x97, (byte) 0x08, (byte) 0x74,
+            (byte) 0xD0, (byte) 0xDB, (byte) 0x76, (byte) 0x7A,
+            (byte) 0x70, (byte) 0x58, (byte) 0x79, (byte) 0x89,
+            (byte) 0x73, (byte) 0xF2, (byte) 0x2C, (byte) 0xF6,
+            (byte) 0x58, (byte) 0x96, (byte) 0x01, (byte) 0xED,
+            (byte) 0xAB, (byte) 0x57, (byte) 0x99, (byte) 0x63,
+            (byte) 0x12, (byte) 0xF2, (byte) 0xEF, (byte) 0x7B,
+            (byte) 0x56, (byte) 0xE1, (byte) 0x23, (byte) 0x45
+    };
+
+    byte[] newTokenHash = {
             (byte) 0xBA, (byte) 0x78, (byte) 0x16, (byte) 0xBF,
             (byte) 0x8F, (byte) 0x01, (byte) 0xCF, (byte) 0xEA,
             (byte) 0x41, (byte) 0x41, (byte) 0x40, (byte) 0xDE,
@@ -53,36 +66,21 @@ public class SeshRepoTest {
 
     @Test
     void getSessionIdBySessionKey() throws SQLException {
-        String sessionId = testRepo.getSessionIdBySessionKey(startingTokenHash);
+        String sessionId = testRepo.getSessionIdBySessionKey(existingTokenHash);
 
         Assertions.assertEquals("repo_existingSessionId", sessionId);
     }
-
-    @Test
-    void getExpirationDateBySessionKey() throws SQLException {
-        Long expirationDate = testRepo.getSessionExpirationDate(startingTokenHash);
-
-        Assertions.assertEquals(0L, expirationDate);
-    }
-
-    @Test
-    void getExpirationDateById() throws SQLException {
-        Long expirationDate = testRepo.getSessionExpirationDate("repo_existingSessionId");
-
-        Assertions.assertEquals(0L, expirationDate);
-    }
-
 
     @Test
     void newSession() throws SQLException {
         testRepo.newSession(
                 "repo_newSessionId",
                 "repo_testId",
-                testTokenHash,
+                newTokenHash,
                 System.currentTimeMillis(),
                 System.currentTimeMillis()+50000
         );
-        String resultId = testRepo.getSessionIdBySessionKey(testTokenHash);
+        String resultId = testRepo.getSessionIdBySessionKey(newTokenHash);
 
         Assertions.assertEquals("repo_newSessionId", resultId);
 
@@ -98,7 +96,7 @@ public class SeshRepoTest {
                 () -> testRepo.newSession(
                         "repo_existingSessionId",
                         "repo_testId",
-                        testTokenHash,
+                        newTokenHash,
                         System.currentTimeMillis(),
                         System.currentTimeMillis()+50000
                 )
@@ -116,7 +114,7 @@ public class SeshRepoTest {
                 () -> testRepo.newSession(
                         "repo_newSessionId",
                         "repo_testId",
-                        startingTokenHash,
+                        existingTokenHash,
                         System.currentTimeMillis(),
                         System.currentTimeMillis()+50000
                 )
@@ -127,9 +125,9 @@ public class SeshRepoTest {
 
     @Test
     void deleteSessionBySessionKey() throws SQLException {
-        testRepo.deleteSessionByToken(startingTokenHash);
+        testRepo.deleteSessionByToken(existingTokenHash);
 
-        String userId = testRepo.getUserIdBySessionKey(startingTokenHash);
+        String userId = testRepo.getUserIdBySessionKey(existingTokenHash);
         Assertions.assertNull(userId);
 
         cleanupNeeded = true;
@@ -139,25 +137,44 @@ public class SeshRepoTest {
     void deleteSessionsByUserId() throws SQLException {
         testRepo.deleteSessionsByUserId("repo_testId");
 
-        String sessionId = testRepo.getSessionIdBySessionKey(startingTokenHash);
+        String sessionId = testRepo.getSessionIdBySessionKey(existingTokenHash);
         Assertions.assertNull(sessionId);
 
         cleanupNeeded = true;
     }
 
+    @Test
+    void tokenExpired() throws SQLException {
+        Assertions.assertTrue(testRepo.tokenExpired(existingTokenHash, System.currentTimeMillis()));
+    }
+
+    @Test
+    void tokenNonexistent() throws SQLException {
+        Assertions.assertTrue(testRepo.tokenExpired(newTokenHash, System.currentTimeMillis()));
+    }
+
+    @Test
+    void tokenNeverExpires() throws SQLException {
+        Assertions.assertFalse(testRepo.tokenExpired(neverExpiringHash, System.currentTimeMillis()));
+    }
+
     @AfterEach
     void cleanup() throws SQLException {
         if (!cleanupNeeded) return;
-        testRepo.deleteSessionByToken(testTokenHash);
-        testRepo.deleteSessionByToken(startingTokenHash);
+        testRepo.deleteSessionByToken(newTokenHash);
+        testRepo.deleteSessionByToken(existingTokenHash);
 
         testRepo.newSession(
                 "repo_existingSessionId",
                 "repo_testId",
-                startingTokenHash,
+                existingTokenHash,
                 System.currentTimeMillis(),
                 0L
         );
     }
 
+    @AfterAll
+    static void closeDataSource() {
+        if (dataSource instanceof HikariDataSource hds) hds.close();
+    }
 }
