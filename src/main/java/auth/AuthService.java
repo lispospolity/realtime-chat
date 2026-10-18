@@ -79,6 +79,62 @@ public class AuthService {
         return new Result<LoginResponse>(200, response);
     }
 
+    public Result<?> logout(String sessionKey, String sessionId) {
+        byte[] sessionHash;
+        String owner;
+
+        try {
+            sessionHash = hashToken(sessionKey);
+        } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
+
+        try {
+            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
+
+            if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
+                var response = new GenericResponse(
+                        true,
+                        "Session timed out."
+                );
+                return new Result<GenericResponse>(401, response);
+            }
+
+            if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
+                var response = new GenericResponse(
+                        true,
+                        "Incorrect session id, or you're not the owner of this session."
+                );
+                return new Result<GenericResponse>(401, response);
+            }
+
+            sessionRepo.deleteSessionBySessionId(sessionId);
+
+        } catch (SQLException ex) { return serverError(500, ex); }
+
+
+        var response = new GenericResponse(
+                true,
+                "Logout successful."
+        );
+        return new Result<GenericResponse>(200, response);
+    }
+
+    public Result<?> logoutAll(String sessionKey) {
+        byte[] sessionHash;
+        String owner;
+        try {
+            sessionHash = hashToken(sessionKey);
+            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
+
+            sessionRepo.deleteSessionsByUserId(owner);
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+
+        var response = new GenericResponse(
+                true,
+                "Logout successful."
+        );
+        return new Result<GenericResponse>(200, response);
+    }
+
     public Result<?> register(String username, String password) {
         boolean userExists;
         try {

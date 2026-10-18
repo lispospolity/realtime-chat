@@ -158,6 +158,16 @@ public class SeshRepoTest {
         Assertions.assertFalse(testRepo.tokenExpired(neverExpiringHash, System.currentTimeMillis()));
     }
 
+    @Test
+    void wrongSessionOwner() throws SQLException {
+        Assertions.assertFalse(testRepo.sessionOwnerCheck("repo_existingSessionId", "repo_wrongUser"));
+    }
+
+    @Test
+    void correctSessionOwner() throws SQLException {
+        Assertions.assertTrue(testRepo.sessionOwnerCheck("repo_existingSessionId", "repo_testId"));
+    }
+
     @AfterEach
     void cleanup() throws SQLException {
         if (!cleanupNeeded) return;

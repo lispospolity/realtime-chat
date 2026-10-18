@@ -1,3 +1,5 @@
+package authService;
+
 import auth.AuthService;
 import auth.Result;
 import com.zaxxer.hikari.HikariDataSource;
@@ -15,7 +17,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Objects;
 
-public class AuthServiceTest {
+public class AuthServiceUserTests {
     private final static Path testEnvDir = Paths.get("src/test/resources/.env.db.test");
     private static AppConfig testConfig;
     private static DataSource dataSource;

@@ -52,6 +52,18 @@ public class SessionRepository {
         }
     }
 
+    public void deleteSessionBySessionId(String sessionId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                    DELETE FROM user_sessions WHERE session_id = ?;
+                    """)
+        ) {
+            statement.setString(1, sessionId);
+
+            statement.executeUpdate();
+        }
+    }
+
     public String getUserIdBySessionKey(byte[] sessionKey) throws SQLException {
         try (Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement("""
@@ -96,6 +108,22 @@ public class SessionRepository {
 
             ResultSet resultSet = statement.executeQuery();
             return !resultSet.next();
+        }
+    }
+
+    public boolean sessionOwnerCheck(String sessionId, String userId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+            PreparedStatement statement = connection.prepareStatement("""
+                    SELECT * FROM user_sessions WHERE
+                    session_id = ?
+                    AND user_id = ?
+                    """)
+        ) {
+            statement.setString(1, sessionId);
+            statement.setString(2, userId);
+
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next();
         }
     }
 }
