@@ -44,7 +44,7 @@ public class AuthService {
             if (userId == null) {
                 var response = new ErrorResponse(
                         false,
-                        "Username or password is incorrect");
+                        "Username or password is incorrect.");
                 return new Result<ErrorResponse>(400, response);
             }
             hash = userRepo.getPassword(userId);
@@ -55,7 +55,7 @@ public class AuthService {
         if (!BCrypt.checkpw(password, hash)) {
             var response = new ErrorResponse(
                     false,
-                    "Username or password is incorrect");
+                    "Username or password is incorrect.");
             return new Result<ErrorResponse>(400, response);
         }
 
@@ -74,6 +74,7 @@ public class AuthService {
         var response = new LoginResponse(
                 true,
                 token,
+                sessionId,
                 "Login successful."
         );
         return new Result<LoginResponse>(200, response);
@@ -91,19 +92,19 @@ public class AuthService {
             owner = sessionRepo.getUserIdBySessionKey(sessionHash);
 
             if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
-                var response = new GenericResponse(
+                var response = new ErrorResponse(
                         true,
                         "Session timed out."
                 );
-                return new Result<GenericResponse>(401, response);
+                return new Result<ErrorResponse>(401, response);
             }
 
             if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
-                var response = new GenericResponse(
+                var response = new ErrorResponse(
                         true,
                         "Incorrect session id, or you're not the owner of this session."
                 );
-                return new Result<GenericResponse>(401, response);
+                return new Result<ErrorResponse>(401, response);
             }
 
             sessionRepo.deleteSessionBySessionId(sessionId);
@@ -123,6 +124,14 @@ public class AuthService {
         String owner;
         try {
             sessionHash = hashToken(sessionKey);
+
+            if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
+                var response = new ErrorResponse(
+                        true,
+                        "Incorrect session key."
+                );
+                return new Result<ErrorResponse>(400, response);
+            }
             owner = sessionRepo.getUserIdBySessionKey(sessionHash);
 
             sessionRepo.deleteSessionsByUserId(owner);

@@ -189,6 +189,8 @@ public class SeshRepoTest {
                 System.currentTimeMillis(),
                 null
         );
+
+        cleanupNeeded = false;
     }
 
     @AfterAll
