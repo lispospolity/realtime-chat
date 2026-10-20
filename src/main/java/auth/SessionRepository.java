@@ -1,4 +1,4 @@
-package database.repository;
+package auth;
 
 import javax.sql.DataSource;
 import java.sql.*;

@@ -2,8 +2,8 @@ import auth.AuthService;
 import config.AppConfig;
 import config.Env;
 import database.DataSourceFactory;
-import database.repository.SessionRepository;
-import database.repository.UserRepository;
+import auth.SessionRepository;
+import user.UserRepository;
 import logging.Debug;
 
 import javax.sql.DataSource;

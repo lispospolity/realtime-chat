@@ -1,13 +1,16 @@
 package auth;
 
+import auth.dto.ErrorResponse;
+import auth.dto.GenericResponse;
+import auth.dto.LoginResponse;
+import auth.dto.Result;
 import config.AppConfig;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import database.repository.SessionRepository;
-import database.repository.UserRepository;
+import user.UserRepository;
 import logging.Debug;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -89,19 +92,18 @@ public class AuthService {
         } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
 
         try {
-            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
-
             if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
                 var response = new ErrorResponse(
-                        true,
+                        false,
                         "Session timed out."
                 );
                 return new Result<ErrorResponse>(401, response);
             }
+            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
 
             if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
                 var response = new ErrorResponse(
-                        true,
+                        false,
                         "Incorrect session id, or you're not the owner of this session."
                 );
                 return new Result<ErrorResponse>(401, response);
@@ -127,7 +129,7 @@ public class AuthService {
 
             if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
                 var response = new ErrorResponse(
-                        true,
+                        false,
                         "Incorrect session key."
                 );
                 return new Result<ErrorResponse>(400, response);

@@ -3,7 +3,7 @@ package database;
 import com.zaxxer.hikari.HikariDataSource;
 import config.AppConfig;
 import config.Env;
-import database.repository.UserRepository;
+import user.UserRepository;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;

@@ -1,13 +1,13 @@
 package authService;
 
 import auth.AuthService;
-import auth.Result;
+import auth.dto.Result;
 import com.zaxxer.hikari.HikariDataSource;
 import config.AppConfig;
 import config.Env;
 import database.DataSourceFactory;
-import database.repository.SessionRepository;
-import database.repository.UserRepository;
+import auth.SessionRepository;
+import user.UserRepository;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;

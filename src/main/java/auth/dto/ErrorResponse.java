@@ -1,4 +1,4 @@
-package auth;
+package auth.dto;
 
 public record ErrorResponse(
         boolean success,

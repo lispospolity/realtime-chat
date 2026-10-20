@@ -1,4 +1,4 @@
-package database.repository;
+package user;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
