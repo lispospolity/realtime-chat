@@ -1,4 +1,4 @@
-package auth.dto;
+package app.auth.dto;
 
 public record Result<T>(
         int httpCode,

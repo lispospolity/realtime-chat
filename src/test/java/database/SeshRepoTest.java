@@ -1,9 +1,10 @@
 package database;
 
+import app.database.DataSourceFactory;
 import com.zaxxer.hikari.HikariDataSource;
-import config.AppConfig;
-import config.Env;
-import auth.SessionRepository;
+import app.config.AppConfig;
+import app.config.Env;
+import app.auth.SessionRepository;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;

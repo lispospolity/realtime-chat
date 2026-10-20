@@ -1,4 +1,4 @@
-package logging;
+package app.logging;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,7 +26,7 @@ public class Debug {
         logger.println("[" + timestamp + "] " + message);
 
         if (logger.checkError()) {
-            System.err.println("Failed to write to server.log");
+            System.err.println("Failed to write to debug logs");
         }
     }
 }

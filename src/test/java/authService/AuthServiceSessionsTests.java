@@ -1,18 +1,18 @@
 package authService;
 
-import auth.*;
-import auth.dto.ErrorResponse;
-import auth.dto.GenericResponse;
-import auth.dto.LoginResponse;
-import auth.dto.Result;
+import app.auth.*;
+import app.auth.dto.response.ErrorResponse;
+import app.auth.dto.response.GenericResponse;
+import app.auth.dto.response.LoginResponse;
+import app.auth.dto.Result;
 import com.zaxxer.hikari.HikariDataSource;
-import config.AppConfig;
-import config.Env;
-import database.DataSourceFactory;
-import auth.SessionRepository;
-import user.UserRepository;
+import app.config.AppConfig;
+import app.config.Env;
+import app.database.DataSourceFactory;
+import app.auth.SessionRepository;
+import app.user.UserRepository;
 import org.junit.jupiter.api.*;
-import utils.TokenUtils;
+import app.utils.TokenUtils;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -100,7 +100,7 @@ public class AuthServiceSessionsTests {
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
-        Assertions.assertEquals("Session timed out.", response.error());
+        Assertions.assertEquals("Incorrect, or expired session key.", response.error());
 
         cleanupNeeded = true;
     }
@@ -122,7 +122,7 @@ public class AuthServiceSessionsTests {
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
-        Assertions.assertEquals("Incorrect session key.", response.error());
+        Assertions.assertEquals("Incorrect, or expired session key.", response.error());
 
         cleanupNeeded = true;
     }

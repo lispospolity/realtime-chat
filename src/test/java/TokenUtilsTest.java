@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import utils.TokenUtils;
-import static utils.TokenUtils.hashToken;
+import app.utils.TokenUtils;
+import static app.utils.TokenUtils.hashToken;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

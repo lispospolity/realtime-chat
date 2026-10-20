@@ -1,22 +1,25 @@
-package auth;
+package app.auth;
 
-import auth.dto.ErrorResponse;
-import auth.dto.GenericResponse;
-import auth.dto.LoginResponse;
-import auth.dto.Result;
-import config.AppConfig;
+import app.auth.dto.response.ErrorResponse;
+import app.auth.dto.response.GenericResponse;
+import app.auth.dto.response.LoginResponse;
+import app.auth.dto.Result;
+import app.config.AppConfig;
+import app.user.UserRepository;
+import app.logging.Debug;
+
+import static app.utils.TokenUtils.generateToken;
+import static app.utils.TokenUtils.hashToken;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import user.UserRepository;
-import logging.Debug;
+import org.springframework.stereotype.Service;
+
 import org.mindrot.jbcrypt.BCrypt;
 
-import static utils.TokenUtils.generateToken;
-import static utils.TokenUtils.hashToken;
-
+@Service
 public class AuthService {
     private final int minNameLength;
     private final int maxNameLength;
@@ -89,13 +92,11 @@ public class AuthService {
 
         try {
             sessionHash = hashToken(sessionKey);
-        } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
 
-        try {
             if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
                 var response = new ErrorResponse(
                         false,
-                        "Session timed out."
+                        "Incorrect, or expired session key."
                 );
                 return new Result<ErrorResponse>(401, response);
             }
@@ -111,7 +112,7 @@ public class AuthService {
 
             sessionRepo.deleteSessionBySessionId(sessionId);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
 
 
         var response = new GenericResponse(
@@ -130,7 +131,7 @@ public class AuthService {
             if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
                 var response = new ErrorResponse(
                         false,
-                        "Incorrect session key."
+                        "Incorrect, or expired session key."
                 );
                 return new Result<ErrorResponse>(400, response);
             }
@@ -159,19 +160,19 @@ public class AuthService {
             return new Result<ErrorResponse>(409, response);
         }
 
-        boolean nameLengthCorrect = username.length() >= minNameLength && username.length() <= maxNameLength;
-        boolean passwordLengthCorrect = password.length() >= minPasswordLength && password.length() <= maxPasswordLength;
+        boolean nameLengthCorrect = !username.isBlank() && username.length() >= minNameLength && username.length() <= maxNameLength;
+        boolean passwordLengthCorrect = !password.isBlank() && password.length() >= minPasswordLength && password.length() <= maxPasswordLength;
 
         if (!passwordLengthCorrect) {
             var response = new ErrorResponse(
                     false,
-                    "Password length is incorrect. Range: "+minPasswordLength+" - "+maxPasswordLength);
+                    "Password length is incorrect. Range: " + minPasswordLength + " - " + maxPasswordLength);
             return new Result<ErrorResponse>(400, response);
         }
         if (!nameLengthCorrect) {
             var response = new ErrorResponse(
                     false,
-                    "Name length is incorrect. Range: "+minNameLength+" - "+maxNameLength);
+                    "Name length is incorrect. Range: " + minNameLength + " - " + maxNameLength);
             return new Result<ErrorResponse>(400, response);
         }
 

@@ -1,4 +1,4 @@
-package config;
+package app.config;
 
 public class AppConfig {
     public Integer minNameLength = 3;

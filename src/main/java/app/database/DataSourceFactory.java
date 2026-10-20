@@ -1,8 +1,8 @@
-package database;
+package app.database;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import config.AppConfig;
+import app.config.AppConfig;
 
 import javax.sql.DataSource;
 

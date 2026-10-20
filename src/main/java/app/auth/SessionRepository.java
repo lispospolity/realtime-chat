@@ -1,8 +1,11 @@
-package auth;
+package app.auth;
+
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
 
+@Repository
 public class SessionRepository {
     private final DataSource dataSource;
 
