@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import org.mindrot.jbcrypt.BCrypt;
@@ -81,12 +82,13 @@ public class AuthService {
                 true,
                 token,
                 sessionId,
+                tokenExpiryInMillis/1000,
                 "Login successful."
         );
         return new Result<LoginResponse>(200, response);
     }
 
-    public Result<?> logout(String sessionKey, String sessionId) {
+    public Result<?> logout(String sessionKey, @Nullable String sessionId) {
         byte[] sessionHash;
         String owner;
 
@@ -101,6 +103,7 @@ public class AuthService {
                 return new Result<ErrorResponse>(401, response);
             }
             owner = sessionRepo.getUserIdBySessionKey(sessionHash);
+            if (sessionId == null) sessionId = sessionRepo.getSessionIdBySessionKey(sessionHash);
 
             if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
                 var response = new ErrorResponse(

@@ -5,8 +5,13 @@ import app.auth.dto.request.LoginRequest;
 import app.auth.dto.request.RegisterRequest;
 
 import app.auth.dto.response.ErrorResponse;
+import app.auth.dto.response.GenericResponse;
+import app.auth.dto.response.LoginResponse;
 import jakarta.validation.Valid;
 
+import org.apache.coyote.Response;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,9 +41,31 @@ public class AuthController {
     @PostMapping ("/api/sessions")
     public ResponseEntity<?>  loginUser(@Valid @RequestBody LoginRequest request) {
         Result<?> result = authService.login(request.username(), request.password());
+
+        if (!(result.response() instanceof LoginResponse response)) {
+            return ResponseEntity
+                    .status(result.httpCode())
+                    .body(result.response());
+        }
+
+        ResponseCookie tokenCookie = createCookie(
+                "session_token",
+                response.token(),
+                response.expiresInSeconds(),
+                true
+        );
+        ResponseCookie sessionCookie = createCookie(
+                "session_id",
+                response.sessionId(),
+                response.expiresInSeconds(),
+                false
+        );
+
         return ResponseEntity
                 .status(result.httpCode())
-                .body(result.response());
+                .header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, sessionCookie.toString())
+                .body(new GenericResponse(response.success(), response.message()));
     }
 
 
@@ -56,6 +83,26 @@ public class AuthController {
                             "Unauthorized access: session_token is null"));
         }
         Result<?> result = authService.logout(sessionToken, sessionId);
+
+        return ResponseEntity
+                .status(result.httpCode())
+                .body(result.response());
+    }
+
+    @DeleteMapping ("/api/sessions/me")
+    public ResponseEntity<?> logoutMe(
+            @CookieValue(name = "session_token", required = false)
+            String sessionToken
+    ) {
+        if (sessionToken == null) {
+            return ResponseEntity
+                    .status(401)
+                    .body(new ErrorResponse(
+                            false,
+                            "Unauthorized access: session_token is null"));
+        }
+        Result<?> result = authService.logout(sessionToken, null);
+
         return ResponseEntity
                 .status(result.httpCode())
                 .body(result.response());
@@ -78,5 +125,20 @@ public class AuthController {
         return ResponseEntity
                 .status(result.httpCode())
                 .body(result.response());
+    }
+
+
+    private ResponseCookie createCookie(
+            String name,
+            String value,
+            long maxAge,
+            boolean httpOnly
+    ) {
+        return ResponseCookie.from(name, value)
+                .httpOnly(httpOnly)
+                .path("/")
+                .sameSite("Lax")
+                .maxAge(maxAge)
+                .build();
     }
 }

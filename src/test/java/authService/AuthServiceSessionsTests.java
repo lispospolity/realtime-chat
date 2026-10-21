@@ -95,6 +95,17 @@ public class AuthServiceSessionsTests {
     }
 
     @Test
+    void logoutMe() {
+        Result<?> result = authService.logout(deleteMeToken, null);
+        GenericResponse response =
+                Assertions.assertInstanceOf(GenericResponse.class, result.response());
+
+        Assertions.assertEquals("Logout successful.", response.message());
+
+        cleanupNeeded = true;
+    }
+
+    @Test
     void logoutOneSeshTimedOut() {
         Result<?> result = authService.logout(expiredToken, "auth_deleteMe");
         ErrorResponse response =
