@@ -15,7 +15,7 @@ public class AppConfig {
     public Integer prepStmtCacheSqlLimit = 2048;
     public Integer maximumPoolSize = 5;
 
-    public Integer webSocketPort = 8080;
+    public Integer webSocketPort = 9090;
 
 
     public AppConfig(Env env) {
