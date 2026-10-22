@@ -197,7 +197,7 @@ public class AuthService {
 
 
     private Result<?> serverError(int httpCode, Exception ex) {
-        Debug.log(ex.toString());
+        Debug.log("AuthService:generic serverError(): "+ex.toString());
 
         var response = new ErrorResponse(
                 false,
