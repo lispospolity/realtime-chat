@@ -5,8 +5,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public enum MessageType {
-    AUTHORIZE(0d), SEND_MESSAGE(1d),
-    AUTHORIZE_RESPONSE(200d), INCOMING_MESSAGE(201d);
+    JOIN_ROOM(0d), SEND_MESSAGE(1d),
+    SERVER_RESPONSE(200d), INCOMING_MESSAGE(201d);
 
     public final Double code;
     MessageType(Double code) {this.code = code;}

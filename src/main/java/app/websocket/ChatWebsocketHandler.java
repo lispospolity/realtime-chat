@@ -44,7 +44,13 @@ public class ChatWebsocketHandler extends WebSocketServer {
             conn.close(4001, "Incorrect session");
             return;
         }
-        //continue the authorization
+        String userId = wsAuthService.getUserId(token);
+        Long expiresAt = wsAuthService.sessionExpiryMillis(token);
+
+        connectionsAuthenticated.put(
+                conn,
+                new Session(userId, expiresAt)
+        );
     }
 
     @Override
@@ -68,8 +74,9 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
         if (!connectionsAuthenticated.containsKey(conn)) return;
 
-        if (msgType == MessageType.SEND_MESSAGE) {
-
+        switch (msgType) {
+            case JOIN_ROOM -> {}
+            case SEND_MESSAGE -> {}
         }
     }
 
