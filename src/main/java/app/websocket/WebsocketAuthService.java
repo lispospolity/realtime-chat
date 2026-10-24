@@ -3,6 +3,7 @@ package app.websocket;
 import app.auth.SessionRepository;
 import app.logging.Debug;
 import app.utils.TokenUtils;
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +29,7 @@ public class WebsocketAuthService {
         }
     }
 
-    public String getUserId(String token) {
+    public @Nullable String getUserId(String token) {
         try {
             byte[] tokenHash = TokenUtils.hashToken(token);
 
@@ -39,15 +40,14 @@ public class WebsocketAuthService {
         }
     }
 
-    public long sessionExpiryMillis(String token) {
+    public @Nullable Long sessionExpiryMillis(String token) {
         try {
             byte[] tokenHash = TokenUtils.hashToken(token);
 
-            //return sessionRepo.getTokenExpiry(tokenHash);
-            return 0;
-        } catch (NoSuchAlgorithmException ex) {
+            return sessionRepo.getTokenExpiry(tokenHash);
+        } catch (NoSuchAlgorithmException | SQLException ex) {
             Debug.log("WebsocketAuthService: tokenCorrect(): "+ex);
-            return 0;
+            return 0L;
         }
     }
 }
