@@ -1,5 +1,6 @@
 package app.auth;
 
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -67,7 +68,7 @@ public class SessionRepository {
         }
     }
 
-    public String getUserIdBySessionKey(byte[] sessionKey) throws SQLException {
+    public @Nullable String getUserIdBySessionKey(byte[] sessionKey) throws SQLException {
         try (Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement("""
                     SELECT user_id FROM user_sessions WHERE sesh_key = ?;
@@ -81,7 +82,7 @@ public class SessionRepository {
         }
     }
 
-    public String getSessionIdBySessionKey(byte[] sessionKey) throws SQLException {
+    public @Nullable String getSessionIdBySessionKey(byte[] sessionKey) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                     SELECT session_id FROM user_sessions WHERE sesh_key = ?;
@@ -111,6 +112,21 @@ public class SessionRepository {
 
             ResultSet resultSet = statement.executeQuery();
             return !resultSet.next();
+        }
+    }
+
+    public @Nullable Long getTokenExpiry(byte[] sessionKey) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT expires_at FROM user_sessions
+                     WHERE sesh_key = ?;
+                     """)
+        ) {
+            statement.setBytes(1, sessionKey);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) return resultSet.getLong(1);
+            return 0L;
         }
     }
 
