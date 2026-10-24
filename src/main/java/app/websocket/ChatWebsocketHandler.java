@@ -1,6 +1,7 @@
 package app.websocket;
 
 import app.logging.Debug;
+import app.websocket.dto.Cookies;
 import app.websocket.dto.MessageType;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -14,22 +15,36 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class ChatWebsocketHandler extends WebSocketServer {
-    Messages messages;
-    Gson gson;
+    private final WebsocketAuthService wsAuthService;
+    private final Messages messages;
+    private final Gson gson;
 
-    HashMap<WebSocket, String> connectionsAuthenticated = new HashMap<>();
-    HashSet<WebSocket> connections = new HashSet<>();
-    HashMap<String, HashSet<WebSocket>> rooms = new HashMap<>();
+    private HashMap<WebSocket, Session> connectionsAuthenticated = new HashMap<>();
+    private HashSet<WebSocket> connections = new HashSet<>();
+    private HashMap<Integer, HashSet<WebSocket>> rooms = new HashMap<>();
 
-    public ChatWebsocketHandler(int port) {
+    public ChatWebsocketHandler(int port, WebsocketAuthService websocketAuthService) {
         super(new InetSocketAddress(port));
-        gson = new Gson();
+        wsAuthService = websocketAuthService;
         messages = new Messages();
+        gson = new Gson();
     }
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         connections.add(conn);
+        String cookieHeader = handshake.getFieldValue("Cookie");
+
+        HashMap<String, String> cookies = Cookies.parse(cookieHeader);
+
+        String token = cookies.get("session_token");
+        boolean tokenIncorrect = wsAuthService.tokenIncorrect(token);
+
+        if (token == null || tokenIncorrect) {
+            conn.close(4001, "Incorrect session");
+            return;
+        }
+        //continue the authorization
     }
 
     @Override
@@ -50,10 +65,6 @@ public class ChatWebsocketHandler extends WebSocketServer {
         }
         if (!(msg.get("t") instanceof Double type)) return;
         MessageType msgType = MessageType.fromCode(type);
-
-        if (msgType == MessageType.AUTHORIZE) {
-
-        }
 
         if (!connectionsAuthenticated.containsKey(conn)) return;
 

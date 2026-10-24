@@ -1,5 +1,6 @@
 package app.user;
 
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -19,7 +20,7 @@ public class UserRepository {
     public void create(String id, String name, String hash, Long createdAt) throws SQLException {
         Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
-                 INSERT INTO users(id, username, password, createdAt)
+                 INSERT INTO users(id, username, password, createdat)
                  VALUES(?, ?, ?, ?);
                  """);
         statement.setString(1, id);
@@ -40,7 +41,7 @@ public class UserRepository {
         statement.executeUpdate();
     }
 
-    public String getId(String name) throws SQLException {
+    public @Nullable String getId(String name) throws SQLException {
         try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
                 SELECT id FROM users WHERE username = ?;
@@ -53,7 +54,7 @@ public class UserRepository {
         }
     }
 
-    public String getPassword(String id) throws SQLException {
+    public @Nullable String getPassword(String id) throws SQLException {
         try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
                 SELECT password FROM users WHERE id = ?;
