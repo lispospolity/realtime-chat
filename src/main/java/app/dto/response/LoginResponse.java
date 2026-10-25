@@ -1,4 +1,4 @@
-package app.auth.dto.response;
+package app.dto.response;
 
 public record LoginResponse(
         boolean success,

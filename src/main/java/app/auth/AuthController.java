@@ -4,12 +4,11 @@ import app.auth.dto.Result;
 import app.auth.dto.request.LoginRequest;
 import app.auth.dto.request.RegisterRequest;
 
-import app.auth.dto.response.ErrorResponse;
-import app.auth.dto.response.GenericResponse;
-import app.auth.dto.response.LoginResponse;
+import app.dto.response.ErrorResponse;
+import app.dto.response.GenericResponse;
+import app.dto.response.LoginResponse;
 import jakarta.validation.Valid;
 
-import org.apache.coyote.Response;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;

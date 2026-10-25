@@ -1,9 +1,9 @@
 package authService;
 
 import app.auth.*;
-import app.auth.dto.response.ErrorResponse;
-import app.auth.dto.response.GenericResponse;
-import app.auth.dto.response.LoginResponse;
+import app.dto.response.ErrorResponse;
+import app.dto.response.GenericResponse;
+import app.dto.response.LoginResponse;
 import app.auth.dto.Result;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;

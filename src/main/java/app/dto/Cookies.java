@@ -1,4 +1,4 @@
-package app.websocket.dto;
+package app.dto;
 
 import java.util.HashMap;
 
