@@ -1,25 +1,28 @@
 package app.room;
 
-public enum Permissions {
-    READ_MESSAGES(1<<0),
-    SEND_MESSAGES(1<<1),
-    DELETE_MESSAGES(1<<2),
-    ADD_USERS(1<<3),
-    REMOVE_USERS(1<<4),
-    CHANGE_PERMISSIONS(1<<5);
+public class Permissions {
+    public static final int READ_MESSAGES = 1<<0;
+    public static final int SEND_MESSAGES = 1<<1;
+    public static final int DELETE_MESSAGES = 1<<2;
+    public static final int ADD_USERS = 1<<3;
+    public static final int REMOVE_USERS = 1<<4;
+    public static final int CHANGE_PERMISSIONS = 1<<5;
 
-    private final int permission;
-
-    public int getOwnerPerms() {
-        return READ_MESSAGES.permission
-                | SEND_MESSAGES.permission
-                | DELETE_MESSAGES.permission
-                | ADD_USERS.permission
-                | REMOVE_USERS.permission
-                | CHANGE_PERMISSIONS.permission;
+    private int permissions;
+    public Permissions(int perms) {
+        this.permissions = perms;
     }
 
-    public int getPermission() { return this.permission; }
+    public boolean letUser(int desiredPerm) {
+        return (permissions & desiredPerm) != 0;
+    }
 
-    Permissions(int perm) { this.permission = perm; }
+    public int getOwnerPerms() {
+        return READ_MESSAGES
+                |SEND_MESSAGES
+                |DELETE_MESSAGES
+                |ADD_USERS
+                |REMOVE_USERS
+                |CHANGE_PERMISSIONS;
+    }
 }
