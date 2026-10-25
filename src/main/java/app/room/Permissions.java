@@ -12,11 +12,12 @@ public enum Permissions {
 
     public int getOwnerPerms() {
         return READ_MESSAGES.permission
-                +SEND_MESSAGES.permission
-                + DELETE_MESSAGES.permission
-                + ADD_USERS.permission
-                + REMOVE_USERS.permission
-                + CHANGE_PERMISSIONS.permission; }
+                | SEND_MESSAGES.permission
+                | DELETE_MESSAGES.permission
+                | ADD_USERS.permission
+                | REMOVE_USERS.permission
+                | CHANGE_PERMISSIONS.permission;
+    }
 
     public int getPermission() { return this.permission; }
 
