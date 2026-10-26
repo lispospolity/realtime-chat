@@ -1,6 +1,7 @@
 package app.chat;
 
 import app.dto.response.GenericResponse;
+import app.room.Permissions;
 import app.room.RoomService;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
@@ -22,7 +23,7 @@ public class ChatService {
      * }
      * respond with sendTo map and the response
      */
-    private final HashMap<Integer, HashMap<WebSocket, Integer>> rooms = new HashMap<>();
+    private final HashMap<Integer, HashMap<WebSocket, Permissions>> rooms = new HashMap<>();
     private final RoomService roomService;
 
     public ChatService(RoomService roomService) {
@@ -35,12 +36,12 @@ public class ChatService {
         }
 
         int roomId = room.intValue();
-        int perms = roomService.getUserPerms(roomId, userId);
+        Permissions perms = roomService.getUserPerms(roomId, userId);
 
         if (rooms.containsKey(roomId)) {
             rooms.get(roomId).put(conn, perms);
         } else {
-            HashMap<WebSocket, Integer> innerMap = new HashMap<>();
+            HashMap<WebSocket, Permissions> innerMap = new HashMap<>();
             innerMap.put(conn, perms);
             rooms.put(roomId, innerMap);
         }

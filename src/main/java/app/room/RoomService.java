@@ -13,12 +13,16 @@ public class RoomService {
         this.roomRepo = roomRepo;
     }
 
-    public int getUserPerms(int roomId, String userId) {
+    public Permissions getUserPerms(int roomId, String userId) {
         try {
-            return roomRepo.getUserPermissions(roomId, userId);
+            if (userId.equals(roomRepo.getOwner(roomId)))
+                return new Permissions(Permissions.getOwnerPerms());
+            else
+                return new Permissions(roomRepo.getUserPermissions(roomId, userId));
+
         } catch (SQLException ex) {
             Debug.log("RoomService: getUserPerms: "+ex);
-            return 0;
+            return new Permissions(0);
         }
     }
 }

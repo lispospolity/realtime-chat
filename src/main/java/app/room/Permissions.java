@@ -7,6 +7,7 @@ public class Permissions {
     public static final int ADD_USERS = 1<<3;
     public static final int REMOVE_USERS = 1<<4;
     public static final int CHANGE_PERMISSIONS = 1<<5;
+    public static final int CHANGE_OWNER = 1<<6;
 
     private int permissions;
     public Permissions(int perms) {
@@ -17,12 +18,13 @@ public class Permissions {
         return (permissions & desiredPerm) != 0;
     }
 
-    public int getOwnerPerms() {
+    public static int getOwnerPerms() {
         return READ_MESSAGES
                 |SEND_MESSAGES
                 |DELETE_MESSAGES
                 |ADD_USERS
                 |REMOVE_USERS
-                |CHANGE_PERMISSIONS;
+                |CHANGE_PERMISSIONS
+                |CHANGE_OWNER;
     }
 }
