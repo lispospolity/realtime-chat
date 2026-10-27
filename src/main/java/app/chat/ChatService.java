@@ -4,7 +4,6 @@ import app.dto.response.GenericResponse;
 import app.room.Permissions;
 import app.room.RoomService;
 import app.websocket.dto.MessageDispatch;
-import app.websocket.dto.MessageType;
 import app.websocket.dto.OutgoingMessage;
 import jakarta.validation.constraints.NotNull;
 import org.java_websocket.WebSocket;
@@ -56,7 +55,7 @@ public class ChatService {
             return error(conn, false, "Field 'room' needs to be an instance of Double.");
         }
         if (!(msg.get("message") instanceof String message)) {
-            return error(conn, false, "Field 'message' needs to be an instance of Double.");
+            return error(conn, false, "Field 'message' needs to be an instance of String.");
         }
         if (message.isBlank()) return error(conn, false, "Message cannot be blank.");
 

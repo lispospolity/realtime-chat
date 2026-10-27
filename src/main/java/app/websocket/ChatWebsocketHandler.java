@@ -13,7 +13,6 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,15 +45,22 @@ public class ChatWebsocketHandler extends WebSocketServer {
         boolean tokenIncorrect = wsAuthService.tokenIncorrect(token);
 
         if (token == null || tokenIncorrect) {
-            conn.close(4001, "Incorrect session");
+            conn.close(4001, "Incorrect session token.");
             return;
         }
+
+        String sessionId = wsAuthService.getSessionId(token);
+        if (sessionId == null) {
+            conn.close(4001, "Incorrect session id.");
+            return;
+        }
+
         String userId = wsAuthService.getUserId(token);
         Long expiresAt = wsAuthService.sessionExpiryMillis(token);
 
         connectionsAuthenticated.put(
                 conn,
-                new Session(userId, expiresAt)
+                new Session(userId, sessionId, expiresAt)
         );
     }
 
@@ -97,7 +103,12 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 sendTo(conn, SERVER_RESPONSE.code, response);
             }
             case SEND_MESSAGE -> {
-
+                MessageDispatch<?> response = chatService.sendMessage(
+                        conn,
+                        connectionsAuthenticated.get(conn).userId(),
+                        msg
+                );
+                sendTo(response.recipients(), MessageType.INCOMING_MESSAGE.code, response.response());
             }
         }
     }
@@ -126,6 +137,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         data.put("data", message);
         String payload = gson.toJson(data);
         for (WebSocket conn : recipients) {
+            if (conn == null) continue;
             conn.send(payload);
         }
     }
