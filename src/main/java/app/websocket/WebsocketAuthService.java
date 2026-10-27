@@ -17,6 +17,17 @@ public class WebsocketAuthService {
         sessionRepo = sessionRepository;
     }
 
+    public @Nullable String getSessionId(String token) {
+        try {
+            byte[] tokenHash = TokenUtils.hashToken(token);
+
+            return sessionRepo.getSessionIdBySessionKey(tokenHash);
+        } catch (NoSuchAlgorithmException | SQLException ex) {
+            Debug.log("WebsocketAuthService: tokenCorrect(): "+ex);
+            return null;
+        }
+    }
+
     public boolean tokenIncorrect(String token) {
         Long timeNow = System.currentTimeMillis();
         try {
