@@ -4,6 +4,7 @@ import app.chat.ChatService;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
 import app.dto.Cookies;
+import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -119,12 +120,12 @@ public class ChatWebsocketHandler extends WebSocketServer {
         conn.send(payload);
     }
 
-    public void sendTo(Collection<WebSocket> conns, double type, Object message) {
+    public void sendTo(WebSocket[] recipients, double type, Object message) {
         HashMap<String, Object> data = new HashMap<>();
         data.put("t", type);
         data.put("data", message);
         String payload = gson.toJson(data);
-        for (WebSocket conn : conns) {
+        for (WebSocket conn : recipients) {
             conn.send(payload);
         }
     }
