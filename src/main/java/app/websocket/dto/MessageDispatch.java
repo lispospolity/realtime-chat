@@ -1,8 +1,14 @@
 package app.websocket.dto;
 
-import org.java_websocket.WebSocket;
+import app.websocket.Session;
+
+import java.util.List;
+
+/**
+ * recipients requires session Objects
+ */
 
 public record MessageDispatch<E> (
-    WebSocket[] recipients,
+    List<Session> recipients,
     E response
 ) {}

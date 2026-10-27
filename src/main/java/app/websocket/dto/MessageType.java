@@ -6,7 +6,8 @@ import java.util.stream.Collectors;
 
 public enum MessageType {
     JOIN_ROOM(0d), SEND_MESSAGE(1d),
-    SERVER_RESPONSE(200d), INCOMING_MESSAGE(201d);
+    SERVER_RESPONSE(200d), INCOMING_MESSAGE(201d),
+    UNKNOWN(500d);
 
     public final Double code;
     MessageType(Double code) {this.code = code;}
@@ -15,6 +16,7 @@ public enum MessageType {
             Arrays.stream(values()).collect(Collectors.toMap(m -> m.code, m -> m));
 
     public static MessageType fromCode(double code) {
-        return BY_CODE.get(code);
+        MessageType type = BY_CODE.get(code);
+        return type != null ? type : UNKNOWN;
     }
 }
