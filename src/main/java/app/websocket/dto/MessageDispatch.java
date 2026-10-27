@@ -1,10 +1,8 @@
 package app.websocket.dto;
 
-import app.dto.response.GenericResponse;
-
 import org.java_websocket.WebSocket;
 
-public record MessageDispatch (
+public record MessageDispatch<E> (
     WebSocket[] recipients,
-    GenericResponse response
+    E response
 ) {}
