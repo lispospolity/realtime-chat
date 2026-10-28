@@ -54,7 +54,7 @@ public class ChatService {
         }
         HashMap<Session, Permissions> room = rooms.get(roomId);
         Permissions perms = room.get(session);
-        if (!perms.letUser(Permissions.SEND_MESSAGES)) {
+        if (!perms.allow(Permissions.SEND_MESSAGES)) {
             return error(session, false, "You cannot send messages in this channel.");
         }
 
@@ -66,7 +66,7 @@ public class ChatService {
         List<Session> recipients = new ArrayList<>();
 
         for (Session recipient : roomMembers) {
-            if (!room.get(recipient).letUser(Permissions.READ_MESSAGES)) {
+            if (!room.get(recipient).allow(Permissions.READ_MESSAGES)) {
                 continue;
             }
             recipients.add(recipient);

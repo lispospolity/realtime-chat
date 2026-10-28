@@ -14,7 +14,7 @@ public class Permissions {
         this.permissions = perms;
     }
 
-    public boolean letUser(int desiredPerm) {
+    public boolean allow(int desiredPerm) {
         return (permissions & desiredPerm) != 0;
     }
 
