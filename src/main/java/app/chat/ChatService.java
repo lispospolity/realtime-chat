@@ -20,12 +20,7 @@ public class ChatService {
         this.roomService = roomService;
     }
 
-    public @NotNull GenericResponse joinRoom(Session session, Map<?, ?> msg) {
-        if (!(msg.get("room") instanceof Double room)) {
-            return new GenericResponse(false, "Field 'room' needs to be an instance of Double.");
-        }
-
-        int roomId = room.intValue();
+    public @NotNull GenericResponse joinRoom(Session session, int roomId) {
         Permissions perms = roomService.getUserPerms(roomId, session.userId());
 
         if (rooms.containsKey(roomId)) {
@@ -39,16 +34,11 @@ public class ChatService {
     }
 
 
-    public @NotNull MessageDispatch<?> sendMessage(Session session, Map<?, ?> msg) {
-        if (!(msg.get("room") instanceof Double roomIdDouble)) {
-            return error(session, false, "Field 'room' needs to be an instance of Double.");
+    public @NotNull MessageDispatch<?> sendMessage(Session session, int roomId, String messageId, String message) {
+        if (message == null || message.isBlank()) {
+            return error(session, false, "Message cannot be empty.");
         }
-        if (!(msg.get("message") instanceof String message)) {
-            return error(session, false, "Field 'message' needs to be an instance of String.");
-        }
-        if (message.isBlank()) return error(session, false, "Message cannot be blank.");
 
-        int roomId = roomIdDouble.intValue();
         if (!rooms.containsKey(roomId) || !rooms.get(roomId).containsKey(session)) {
             return error(session, false, "You don't have access to this room.");
         }
@@ -58,6 +48,8 @@ public class ChatService {
             return error(session, false, "You cannot send messages in this channel.");
         }
 
+        //messageId also cannot be null, or blank, its user supplied
+        //check if messageId is in the room in the database
         //put into the database WAITING FOR MESSAGE REPOSITORY AND MESSAGE SERVICE
 
         OutgoingMessage response = new OutgoingMessage(roomId, session.userId(), message);

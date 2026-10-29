@@ -6,8 +6,9 @@ import app.logging.Debug;
 import app.dto.Cookies;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import app.websocket.dto.request.JoinRoomRequest;
+import app.websocket.dto.request.SendMessageRequest;
+import com.google.gson.*;
 import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -74,8 +75,9 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        if (connectionsAuthenticated.get(conn) == null) return;
-        Long expiresAt = connectionsAuthenticated.get(conn).expiresAt();
+        Session session = connectionsAuthenticated.get(conn);
+        if (session == null) return;
+        Long expiresAt = session.expiresAt();
 
         boolean sessionActive;
         if (expiresAt == null) sessionActive = true;
@@ -83,28 +85,48 @@ public class ChatWebsocketHandler extends WebSocketServer {
         if (!sessionActive) return;
 
         if (message == null) return;
-        Map<?, ?> msg;
+        JsonObject json = JsonParser.parseString(message).getAsJsonObject();
+
+        int type;
         try {
-            msg = gson.fromJson(message, Map.class);
-        } catch (JsonSyntaxException e) {
-            Debug.log("ChatWebsocketHandler: onMessage: JsonSyntaxException from: " + conn);
+            type = json.get("t").getAsInt();
+        } catch (NumberFormatException | NullPointerException | UnsupportedOperationException ex) {
+            Debug.log("ChatWebsocketHandler: onMessage: Suspicious message coming from user Id: "+ session.userId() +", message:"+ message);
             return;
         }
-        if (!(msg.get("t") instanceof Double type)) return;
+
         MessageType msgType = MessageType.fromCode(type);
 
         switch (msgType) {
             case JOIN_ROOM -> {
+                JoinRoomRequest request;
+                try {
+                    request = gson.fromJson(message, JoinRoomRequest.class);
+                } catch (JsonSyntaxException ex) {
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.userId());
+                    return;
+                }
+
                 GenericResponse response = chatService.joinRoom(
-                    connectionsAuthenticated.get(conn),
-                    msg
+                        session,
+                        request.getRoom()
                 );
                 sendTo(conn, SERVER_RESPONSE.code, response);
             }
             case SEND_MESSAGE -> {
+                SendMessageRequest request;
+                try {
+                    request = gson.fromJson(message, SendMessageRequest.class);
+                } catch (JsonSyntaxException ex) {
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.userId());
+                    return;
+                }
+
                 MessageDispatch<?> response = chatService.sendMessage(
-                        connectionsAuthenticated.get(conn),
-                        msg
+                        session,
+                        request.getRoom(),
+                        request.getMessageId(),
+                        request.getMessage()
                 );
                 sendTo(response.recipients(), MessageType.INCOMING_MESSAGE.code, response.response());
             }
