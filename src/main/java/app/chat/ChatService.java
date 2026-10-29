@@ -5,7 +5,7 @@ import app.room.Permissions;
 import app.room.RoomService;
 import app.websocket.Session;
 import app.websocket.dto.MessageDispatch;
-import app.websocket.dto.OutgoingMessage;
+import app.websocket.dto.response.OutgoingMessage;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
