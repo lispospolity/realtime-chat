@@ -6,7 +6,7 @@ import app.auth.dto.request.RegisterRequest;
 
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
-import app.dto.response.LoginResponse;
+import app.auth.dto.response.LoginResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpHeaders;

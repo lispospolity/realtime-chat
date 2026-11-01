@@ -27,4 +27,8 @@ public class Permissions {
                 |CHANGE_PERMISSIONS
                 |CHANGE_OWNER;
     }
+
+    public static boolean inBounds(int perms) {
+        return perms > 0 && perms < getOwnerPerms();
+    }
 }

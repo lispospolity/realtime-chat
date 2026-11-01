@@ -1,8 +1,9 @@
 package app.auth;
 
+import app.auth.dto.response.AuthenticationResponse;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
-import app.dto.response.LoginResponse;
+import app.auth.dto.response.LoginResponse;
 import app.auth.dto.Result;
 import app.config.AppConfig;
 import app.user.UserRepository;
@@ -14,7 +15,10 @@ import static app.utils.TokenUtils.hashToken;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import app.utils.TokenUtils;
+import app.websocket.Session;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +35,8 @@ public class AuthService {
 
     private final UserRepository userRepo;
     private final SessionRepository sessionRepo;
+
+    private final ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
 
     public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository) {
         minNameLength = appConfig.minNameLength;
@@ -78,6 +84,8 @@ public class AuthService {
             sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
         } catch (SQLException ex) { return serverError(500, ex); }
 
+        sessions.put(token, new Session(userId, sessionId, tokenExpiryInMillis));
+
         var response = new LoginResponse(
                 true,
                 token,
@@ -117,6 +125,7 @@ public class AuthService {
 
         } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
 
+        sessions.remove(sessionKey);
 
         var response = new GenericResponse(
                 true,
@@ -126,22 +135,15 @@ public class AuthService {
     }
 
     public Result<?> logoutAll(String sessionKey) {
-        byte[] sessionHash;
-        String owner;
+        Result<?> result = authenticate(sessionKey);
+        if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
+        String userId = authResponse.userId();
+
         try {
-            sessionHash = hashToken(sessionKey);
+            sessionRepo.deleteSessionsByUserId(userId);
+        } catch (SQLException ex) { return serverError(500, ex); }
 
-            if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
-                var response = new ErrorResponse(
-                        false,
-                        "Incorrect, or expired session key."
-                );
-                return new Result<ErrorResponse>(400, response);
-            }
-            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
-
-            sessionRepo.deleteSessionsByUserId(owner);
-        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+        deleteUserSessions(userId);
 
         var response = new GenericResponse(
                 true,
@@ -194,7 +196,70 @@ public class AuthService {
         return new Result<GenericResponse>(201, response);
     }
 
+    public Result<?> authenticate(String sessionKey) {
+        if (!sessions.containsKey(sessionKey)) return dbAuthenticate(sessionKey);
 
+        Session session = sessions.get(sessionKey);
+        if (session == null || session.userId() == null) return dbAuthenticate(sessionKey);
+
+        if (session.expiresAt() == null || session.expiresAt() <= System.currentTimeMillis()) {
+            var response = new ErrorResponse(
+                    false,
+                    "Incorrect, or expired session key."
+            );
+            return new Result<ErrorResponse>(400, response);
+        }
+
+        var response = new AuthenticationResponse(
+                true,
+                session.userId(),
+                "Successful authentication."
+        );
+        return new Result<AuthenticationResponse>(200, response);
+    }
+
+    private Result<?> dbAuthenticate(String sessionKey) {
+        if (sessionKey == null || sessionKey.isBlank()) {
+            var response = new ErrorResponse(
+                    false,
+                    "Session key cookie cannot be empty.");
+            return new Result<ErrorResponse>(401, response);
+        }
+
+        try {
+            byte[] tokenHash = TokenUtils.hashToken(sessionKey);
+
+            if (sessionRepo.tokenExpired(tokenHash, System.currentTimeMillis())) {
+                var response = new ErrorResponse(
+                        false,
+                        "Incorrect, or expired session key."
+                );
+                return new Result<ErrorResponse>(400, response);
+            }
+            String userId = sessionRepo.getUserIdBySessionKey(tokenHash);
+            if (userId == null) {
+                return serverError(500, new NullPointerException("AuthService:authenticate(): For whatever fuckass reason userId is null."));
+            }
+
+            String sessionId = sessionRepo.getSessionIdBySessionKey(tokenHash);
+            Long expiresAt = sessionRepo.getTokenExpiry(tokenHash);
+            sessions.put(sessionKey, new Session(userId, sessionId, expiresAt));
+
+            var response = new AuthenticationResponse(
+                    true,
+                    userId,
+                    "Successful authentication."
+            );
+            return new Result<AuthenticationResponse>(200, response);
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+    }
+
+    private void deleteUserSessions(String userId) {
+        for (String seshKey : sessions.keySet()) {
+            if (sessions.get(seshKey).userId().equals(userId))
+                sessions.remove(seshKey);
+        }
+    }
 
     private Result<?> serverError(int httpCode, Exception ex) {
         Debug.log("AuthService:generic serverError(): "+ex.toString());

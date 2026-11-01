@@ -17,7 +17,6 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import static app.websocket.dto.MessageType.SERVER_RESPONSE;
 

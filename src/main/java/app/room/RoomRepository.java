@@ -34,11 +34,11 @@ public class RoomRepository {
             if (resultSet.next()) {
                 return resultSet.getInt(1);
             }
-            throw new SQLException("Room created by "+ownerId+", but no generated ID was returned");
+            throw new SQLException("Room created by " + ownerId + ", but no generated ID was returned");
         }
     }
 
-    public void deleteRoom(int roomId) throws SQLException{
+    public void deleteRoom(int roomId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      DELETE FROM rooms WHERE room_id = ?;
@@ -68,6 +68,7 @@ public class RoomRepository {
     }
 
     /**
+     * Throws an SQLException when the room doesn't exist.
      * Permissions (column perms) work in the same way as Linux path rwx permissions:
      * 1) Read messages (first bit),
      * 2) Send message (second bit),
@@ -126,7 +127,7 @@ public class RoomRepository {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      SELECT room_id FROM room_members WHERE
-                     AND user_id = ?;
+                     user_id = ?;
                      """)
         ) {
             statement.setString(1, userId);
@@ -157,6 +158,21 @@ public class RoomRepository {
                 return resultSet.getInt(1);
             }
             return 0;
+        }
+    }
+
+    public boolean roomExists(int roomId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT room_id FROM rooms WHERE
+                     room_id = ?;
+                     """)
+        ) {
+            statement.setInt(1, roomId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            return resultSet.next();
         }
     }
 }
