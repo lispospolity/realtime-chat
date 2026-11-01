@@ -161,6 +161,22 @@ public class RoomRepository {
         }
     }
 
+    public boolean userInRoom(int roomId, String userId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT * FROM room_members WHERE
+                     room_id = ?
+                     AND user_id = ?;
+                     """)
+        ) {
+            statement.setInt(1, roomId);
+            statement.setString(2, userId);
+
+            ResultSet resultSet = statement.executeQuery();
+            return resultSet.next();
+        }
+    }
+
     public boolean roomExists(int roomId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""

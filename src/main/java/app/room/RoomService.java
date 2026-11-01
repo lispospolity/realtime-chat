@@ -51,7 +51,7 @@ public class RoomService {
     }
 
     public Result<?> addToRoom(String userId, int roomId, String newMemberId, int permissions) {
-        if (Permissions.inBounds(permissions)) {
+        if (!Permissions.inBounds(permissions)) {
             var response = new ErrorResponse(
                     false,
                     "Permissions out of bounds.");
@@ -74,6 +74,13 @@ public class RoomService {
                 return new Result<ErrorResponse>(400, response);
             }
 
+            if (roomRepo.userInRoom(roomId, newMemberId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This user is already in the room.");
+                return new Result<ErrorResponse>(400, response);
+            }
+
             roomRepo.addToRoom(roomId, newMemberId, permissions);
         } catch (SQLException ex) { return serverError(500, ex); }
 
@@ -86,7 +93,7 @@ public class RoomService {
     public Permissions getUserPerms(int roomId, String userId) {
         try {
             if (userId.equals(roomRepo.getOwner(roomId)))
-                return new Permissions(Permissions.getOwnerPerms());
+                return new Permissions(Permissions.getMaxPerms());
             else
                 return new Permissions(roomRepo.getUserPermissions(roomId, userId));
 

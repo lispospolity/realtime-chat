@@ -7,7 +7,6 @@ public class Permissions {
     public static final int ADD_USERS = 1<<3;
     public static final int REMOVE_USERS = 1<<4;
     public static final int CHANGE_PERMISSIONS = 1<<5;
-    public static final int CHANGE_OWNER = 1<<6;
 
     private int permissions;
     public Permissions(int perms) {
@@ -18,17 +17,16 @@ public class Permissions {
         return (permissions & desiredPerm) != 0;
     }
 
-    public static int getOwnerPerms() {
+    public static int getMaxPerms() {
         return READ_MESSAGES
                 |SEND_MESSAGES
                 |DELETE_MESSAGES
                 |ADD_USERS
                 |REMOVE_USERS
-                |CHANGE_PERMISSIONS
-                |CHANGE_OWNER;
+                |CHANGE_PERMISSIONS;
     }
 
     public static boolean inBounds(int perms) {
-        return perms > 0 && perms < getOwnerPerms();
+        return perms >= 0 && perms <= getMaxPerms();
     }
 }

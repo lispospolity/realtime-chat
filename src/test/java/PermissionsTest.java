@@ -6,7 +6,7 @@ public class PermissionsTest {
 
     @Test
     void ownerPerms() {
-        int owner = Permissions.getOwnerPerms();
+        int owner = Permissions.getMaxPerms();
 
         Permissions perms = new Permissions(owner);
 
@@ -16,7 +16,6 @@ public class PermissionsTest {
         Assertions.assertTrue(perms.allow(Permissions.ADD_USERS));
         Assertions.assertTrue(perms.allow(Permissions.REMOVE_USERS));
         Assertions.assertTrue(perms.allow(Permissions.CHANGE_PERMISSIONS));
-        Assertions.assertTrue(perms.allow(Permissions.CHANGE_OWNER));
     }
 
     @Test
@@ -31,7 +30,6 @@ public class PermissionsTest {
         Assertions.assertFalse(perms.allow(Permissions.ADD_USERS));
         Assertions.assertFalse(perms.allow(Permissions.REMOVE_USERS));
         Assertions.assertFalse(perms.allow(Permissions.CHANGE_PERMISSIONS));
-        Assertions.assertFalse(perms.allow(Permissions.CHANGE_OWNER));
     }
 
 

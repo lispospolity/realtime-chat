@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS chat.user_sessions (
         UNIQUE (sesh_key),
     CONSTRAINT fk_user_sessions_user
         FOREIGN KEY (user_id) REFERENCES chat.users(id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS chat.rooms(
@@ -48,7 +49,8 @@ CREATE TABLE IF NOT EXISTS chat.room_members(
         FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_user_id_users
-        FOREIGN KEY (user_id) REFERENCES chat.users(id),
+        FOREIGN KEY (user_id) REFERENCES chat.users(id)
+        ON DELETE CASCADE,
     PRIMARY KEY (room_id, user_id)
 );
 
@@ -71,6 +73,7 @@ CREATE TABLE IF NOT EXISTS chat_test.user_sessions (
         UNIQUE (sesh_key),
     CONSTRAINT fk_user_sessions_user_test
         FOREIGN KEY (user_id) REFERENCES chat_test.users(id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS chat_test.rooms(
@@ -89,7 +92,8 @@ CREATE TABLE IF NOT EXISTS chat_test.room_members(
         FOREIGN KEY (room_id) REFERENCES chat_test.rooms(room_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_user_id_users
-        FOREIGN KEY (user_id) REFERENCES chat_test.users(id),
+        FOREIGN KEY (user_id) REFERENCES chat_test.users(id)
+        ON DELETE CASCADE,
     PRIMARY KEY (room_id, user_id)
 );
 
@@ -102,6 +106,24 @@ VALUES
     'auth_testUser',
     '$2a$10$er0XcM2CniCxEG8PEWrxKu4yv38WsgbxAh/0X9AdsAZv.ytLjgFsi',
     1791977343811
+),
+(
+     '12345678-1234-1234-1234-b3588392f1c8',
+     'room_testOwner',
+     '$2a$10$er0XcM2CniCxEG8PEWrxKu4yv38WsgbxAh/0X9AdsAZv.ytLjgFsi',
+     1791977343811
+),
+(
+     '87654321-1234-1234-1234-b3588392f1c8',
+     'room_testMemberAllPerms',
+     '$2a$10$er0XcM2CniCxEG8PEWrxKu4yv38WsgbxAh/0X9AdsAZv.ytLjgFsi',
+     1791977343811
+),
+(
+     '87654321-4321-1234-1234-b3588392f1c8',
+     'room_testMemberNoPerms',
+     '$2a$10$er0XcM2CniCxEG8PEWrxKu4yv38WsgbxAh/0X9AdsAZv.ytLjgFsi',
+     1791977343811
 ),
 (
     'repo_deleteId',
