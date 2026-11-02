@@ -198,13 +198,21 @@ public class AuthService {
         return new Result<GenericResponse>(201, response);
     }
 
-    public Result<?> authenticate(String sessionKey) {
+    public Result<?> authenticate(@Nullable String sessionKey) {
+        if (sessionKey == null) {
+            var response = new ErrorResponse(
+                    false,
+                    "Session token cannot be null."
+            );
+            return new Result<ErrorResponse>(400, response);
+        }
+
         if (!sessions.containsKey(sessionKey)) return dbAuthenticate(sessionKey);
 
         Session session = sessions.get(sessionKey);
         if (session == null || session.userId() == null) return dbAuthenticate(sessionKey);
 
-        if (session.expiresAtMillis() == null || session.expiresAtMillis() <= System.currentTimeMillis()) {
+        if (session.expiresAtMillis() != null && session.expiresAtMillis() <= System.currentTimeMillis()) {
             var response = new ErrorResponse(
                     false,
                     "Incorrect, or expired session key."
