@@ -70,6 +70,11 @@ public class RoomsTests {
         Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
     }
 
+    @AfterEach
+    void cleanup() throws SQLException {
+        roomRepo.deleteRoom(testingRoom);
+    }
+
 
     @AfterAll
     static void closeDataSource() {
