@@ -1,6 +1,6 @@
 package app.auth.dto.response;
 
-import app.websocket.Session;
+import app.session.Session;
 import jakarta.validation.constraints.NotNull;
 
 public record AuthenticationResponse(

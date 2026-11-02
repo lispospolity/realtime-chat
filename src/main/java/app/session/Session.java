@@ -1,4 +1,4 @@
-package app.websocket;
+package app.session;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;

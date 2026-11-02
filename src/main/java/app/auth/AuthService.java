@@ -18,7 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import app.utils.TokenUtils;
-import app.websocket.Session;
+import app.session.Session;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
 

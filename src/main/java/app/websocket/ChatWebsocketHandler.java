@@ -4,6 +4,7 @@ import app.chat.ChatService;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
 import app.dto.Cookies;
+import app.session.Session;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
 import app.websocket.dto.request.JoinRoomRequest;

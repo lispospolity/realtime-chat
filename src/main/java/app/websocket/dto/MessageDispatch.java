@@ -1,6 +1,6 @@
 package app.websocket.dto;
 
-import app.websocket.Session;
+import app.session.Session;
 
 import java.util.List;
 

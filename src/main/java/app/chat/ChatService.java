@@ -3,7 +3,7 @@ package app.chat;
 import app.dto.response.GenericResponse;
 import app.room.Permissions;
 import app.room.RoomService;
-import app.websocket.Session;
+import app.session.Session;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.response.OutgoingMessage;
 import jakarta.validation.constraints.NotNull;
