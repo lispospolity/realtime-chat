@@ -1,6 +1,9 @@
 package app.websocket;
 
+import app.auth.AuthService;
+import app.auth.dto.response.AuthenticationResponse;
 import app.chat.ChatService;
+import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
 import app.dto.Cookies;
@@ -22,17 +25,17 @@ import java.util.List;
 import static app.websocket.dto.MessageType.SERVER_RESPONSE;
 
 public class ChatWebsocketHandler extends WebSocketServer {
-    private final WebsocketAuthService wsAuthService;
+    private final AuthService authService;
     private final ChatService chatService;
     private final Gson gson;
 
     private final HashMap<WebSocket, Session> connectionsAuthenticated = new HashMap<>();
     private final HashSet<WebSocket> connections = new HashSet<>();
 
-    public ChatWebsocketHandler(int port, WebsocketAuthService websocketAuthService, ChatService chatService) {
+    public ChatWebsocketHandler(int port, AuthService authService, ChatService chatService) {
         super(new InetSocketAddress(port));
-        this.wsAuthService = websocketAuthService;
         this.chatService = chatService;
+        this.authService = authService;
         gson = new Gson();
     }
 
@@ -44,25 +47,23 @@ public class ChatWebsocketHandler extends WebSocketServer {
         HashMap<String, String> cookies = Cookies.parse(cookieHeader);
 
         String token = cookies.get("session_token");
-        boolean tokenIncorrect = wsAuthService.tokenIncorrect(token);
 
-        if (token == null || tokenIncorrect) {
-            conn.close(4001, "Incorrect session token.");
+        Object response = authService.authenticate(token).response();
+        if (!(response instanceof AuthenticationResponse(boolean success, Session session, String message))) {
+
+            if (!(response instanceof ErrorResponse errorResponse)) return;
+            conn.close(4001, errorResponse.error());
             return;
         }
 
-        String sessionId = wsAuthService.getSessionId(token);
-        if (sessionId == null) {
-            conn.close(4001, "Incorrect session id.");
+        if (!success) {
+            conn.close(4001, message);
             return;
         }
-
-        String userId = wsAuthService.getUserId(token);
-        Long expiresAt = wsAuthService.sessionExpiryMillis(token);
 
         connectionsAuthenticated.put(
                 conn,
-                new Session(userId, sessionId, expiresAt)
+                session
         );
     }
 
