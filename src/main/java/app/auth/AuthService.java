@@ -85,7 +85,7 @@ public class AuthService {
             sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
         } catch (SQLException ex) { return serverError(500, ex); }
 
-        Session session = new Session(userId, sessionId, tokenExpiryInMillis);
+        Session session = new Session(userId, sessionId, timeNow + tokenExpiryInMillis);
         sessions.put(token, session);
 
         var response = new LoginResponse(
