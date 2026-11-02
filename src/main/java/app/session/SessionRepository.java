@@ -1,4 +1,4 @@
-package app.auth;
+package app.session;
 
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Repository;

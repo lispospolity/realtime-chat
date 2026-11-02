@@ -4,7 +4,7 @@ import app.database.DataSourceFactory;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;
-import app.auth.SessionRepository;
+import app.session.SessionRepository;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;

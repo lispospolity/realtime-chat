@@ -9,7 +9,7 @@ import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;
 import app.database.DataSourceFactory;
-import app.auth.SessionRepository;
+import app.session.SessionRepository;
 import app.user.UserRepository;
 import org.junit.jupiter.api.*;
 import app.utils.TokenUtils;

@@ -6,6 +6,7 @@ import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
 import app.auth.dto.Result;
 import app.config.AppConfig;
+import app.session.SessionRepository;
 import app.user.UserRepository;
 import app.logging.Debug;
 
