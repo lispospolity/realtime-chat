@@ -9,5 +9,5 @@ import jakarta.validation.constraints.NotNull;
 public record Session(
         @NotNull String userId,
         @NotNull String sessionId,
-        @Nullable Long expiresAt
+        @Nullable Long expiresAtMillis
 ) {}

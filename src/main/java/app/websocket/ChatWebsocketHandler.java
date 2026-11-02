@@ -76,7 +76,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         Session session = connectionsAuthenticated.get(conn);
         if (session == null) return;
-        Long expiresAt = session.expiresAt();
+        Long expiresAt = session.expiresAtMillis();
 
         boolean sessionActive;
         if (expiresAt == null) sessionActive = true;

@@ -84,7 +84,8 @@ public class AuthService {
             sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
         } catch (SQLException ex) { return serverError(500, ex); }
 
-        sessions.put(token, new Session(userId, sessionId, tokenExpiryInMillis));
+        Session session = new Session(userId, sessionId, tokenExpiryInMillis);
+        sessions.put(token, session);
 
         var response = new LoginResponse(
                 true,
@@ -137,7 +138,7 @@ public class AuthService {
     public Result<?> logoutAll(String sessionKey) {
         Result<?> result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().userId();
 
         try {
             sessionRepo.deleteSessionsByUserId(userId);
@@ -202,7 +203,7 @@ public class AuthService {
         Session session = sessions.get(sessionKey);
         if (session == null || session.userId() == null) return dbAuthenticate(sessionKey);
 
-        if (session.expiresAt() == null || session.expiresAt() <= System.currentTimeMillis()) {
+        if (session.expiresAtMillis() == null || session.expiresAtMillis() <= System.currentTimeMillis()) {
             var response = new ErrorResponse(
                     false,
                     "Incorrect, or expired session key."
@@ -212,7 +213,7 @@ public class AuthService {
 
         var response = new AuthenticationResponse(
                 true,
-                session.userId(),
+                session,
                 "Successful authentication."
         );
         return new Result<AuthenticationResponse>(200, response);
@@ -243,11 +244,13 @@ public class AuthService {
 
             String sessionId = sessionRepo.getSessionIdBySessionKey(tokenHash);
             Long expiresAt = sessionRepo.getTokenExpiry(tokenHash);
-            sessions.put(sessionKey, new Session(userId, sessionId, expiresAt));
+
+            Session session = new Session(userId, sessionId, expiresAt);
+            sessions.put(sessionKey, session);
 
             var response = new AuthenticationResponse(
                     true,
-                    userId,
+                    session,
                     "Successful authentication."
             );
             return new Result<AuthenticationResponse>(200, response);
