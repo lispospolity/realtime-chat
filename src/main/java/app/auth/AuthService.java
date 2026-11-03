@@ -139,7 +139,7 @@ public class AuthService {
     public Result<?> logoutAll(String sessionKey) {
         Result<?> result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
-        String userId = authResponse.session().userId();
+        String userId = authResponse.userId();
 
         try {
             sessionRepo.deleteSessionsByUserId(userId);
@@ -222,7 +222,7 @@ public class AuthService {
 
         var response = new AuthenticationResponse(
                 true,
-                session,
+                session.userId(),
                 "Successful authentication."
         );
         return new Result<AuthenticationResponse>(200, response);
@@ -259,7 +259,7 @@ public class AuthService {
 
             var response = new AuthenticationResponse(
                     true,
-                    session,
+                    session.userId(),
                     "Successful authentication."
             );
             return new Result<AuthenticationResponse>(200, response);

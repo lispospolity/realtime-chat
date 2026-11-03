@@ -1,9 +1,10 @@
 package app.chat;
 
+import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.room.Permissions;
 import app.room.RoomService;
-import app.session.Session;
+import app.room.dto.UserPermsResponse;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.response.OutgoingMessage;
 import jakarta.validation.constraints.NotNull;
@@ -13,71 +14,80 @@ import java.util.*;
 
 @Service
 public class ChatService {
-    private final HashMap<Integer, HashMap<Session, Permissions>> rooms = new HashMap<>();
+    private final HashMap<Integer, HashMap<String, Permissions>> rooms = new HashMap<>();
     private final RoomService roomService;
 
     public ChatService(RoomService roomService) {
         this.roomService = roomService;
     }
 
-    public @NotNull GenericResponse joinRoom(Session session, int roomId) {
-        Permissions perms = roomService.getUserPerms(roomId, session.userId());
+    public @NotNull Object joinRoom(String userId, int roomId) {
+        Object response = roomService.getUserPerms(roomId, userId).response();
+        if (!(response instanceof UserPermsResponse(boolean success, Permissions perms, String message)))
+            return response;
+
+        if (!success)
+            return response;
 
         if (rooms.containsKey(roomId)) {
-            rooms.get(roomId).put(session, perms);
+            rooms.get(roomId).put(userId, perms);
         } else {
-            HashMap<Session, Permissions> innerMap = new HashMap<>();
-            innerMap.put(session, perms);
+            HashMap<String, Permissions> innerMap = new HashMap<>();
+            innerMap.put(userId, perms);
+
             rooms.put(roomId, innerMap);
         }
         return new GenericResponse(true, "Successfully joined a room.");
     }
 
 
-    public @NotNull MessageDispatch<?> sendMessage(Session session, int roomId, String messageId, String message) {
+    public @NotNull MessageDispatch<?, ?> sendMessage(String userId, int roomId, String messageId, String message) {
         if (message == null || message.isBlank()) {
-            return error(session, false, "Message cannot be empty.");
+            return toSender(false, "Message cannot be empty.");
         }
 
-        if (!rooms.containsKey(roomId) || !rooms.get(roomId).containsKey(session)) {
-            return error(session, false, "You don't have access to this room.");
+        if (messageId == null || messageId.isBlank()) {
+            return toSender(false, "MessageId cannot be empty.");
         }
-        HashMap<Session, Permissions> room = rooms.get(roomId);
-        Permissions perms = room.get(session);
+
+        if (!rooms.containsKey(roomId) || !rooms.get(roomId).containsKey(userId)) {
+            return toSender(false, "You don't have access to this room.");
+        }
+        HashMap<String, Permissions> room = rooms.get(roomId);
+        Permissions perms = room.get(userId);
         if (!perms.allow(Permissions.SEND_MESSAGES)) {
-            return error(session, false, "You cannot send messages in this channel.");
+            return toSender(false, "You cannot send messages in this channel.");
         }
 
         //messageId also cannot be null, or blank, its user supplied
         //check if messageId is in the room in the database
         //put into the database WAITING FOR MESSAGE REPOSITORY AND MESSAGE SERVICE
 
-        OutgoingMessage response = new OutgoingMessage(roomId, session.userId(), message);
+        OutgoingMessage msg = new OutgoingMessage(roomId, userId, message);
 
-        Collection<Session> roomMembers = rooms.get(roomId).keySet();
-        List<Session> recipients = new ArrayList<>();
+        Collection<String> roomMembers = rooms.get(roomId).keySet();
+        List<String> recipients = new ArrayList<>();
 
-        for (Session recipient : roomMembers) {
-            if (!room.get(recipient).allow(Permissions.READ_MESSAGES)) {
+        for (String recipientId : roomMembers) {
+            if (!room.get(recipientId).allow(Permissions.READ_MESSAGES)) {
                 continue;
             }
-            recipients.add(recipient);
+            recipients.add(recipientId);
         }
 
-        return new MessageDispatch<OutgoingMessage>(recipients, response);
+        GenericResponse response = new GenericResponse(true, "Message successfully sent.");
+
+        return new MessageDispatch<OutgoingMessage, GenericResponse>(recipients, msg, response);
     }
 
-    public void userLeft(Session session) {
-        for (HashMap<Session, Permissions> room : rooms.values()) {
-            room.remove(session);
+    public void userLeft(String userId) {
+        for (HashMap<String, Permissions> room : rooms.values()) {
+            room.remove(userId);
         }
     }
 
 
-    private MessageDispatch<GenericResponse> error(Session session, boolean success, String message) {
-        GenericResponse response = new GenericResponse(success, message);
-        List<Session> recipient = new ArrayList<>();
-        recipient.add(session);
-        return new MessageDispatch<GenericResponse>(recipient, response);
+    private MessageDispatch<Void, ErrorResponse> toSender(boolean success, String message) {
+        return new MessageDispatch<Void, ErrorResponse>(null, null, new ErrorResponse(success, message));
     }
 }

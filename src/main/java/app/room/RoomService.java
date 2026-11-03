@@ -1,6 +1,7 @@
 package app.room;
 
 import app.auth.dto.Result;
+import app.room.dto.UserPermsResponse;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
@@ -90,17 +91,38 @@ public class RoomService {
         return new Result<GenericResponse>(201, response);
     }
 
-    public Permissions getUserPerms(int roomId, String userId) {
+    public Result<?> getUserPerms(int roomId, String userId) {
+        Permissions perms;
         try {
+            if (!roomRepo.roomExists(roomId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result<ErrorResponse>(400, response);
+            }
+
+            if (!roomRepo.userInRoom(roomId, userId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "You are not a member of this room.");
+                return new Result<ErrorResponse>(401, response);
+            }
+
             if (userId.equals(roomRepo.getOwner(roomId)))
-                return new Permissions(Permissions.getMaxPerms());
+                perms = new Permissions(Permissions.getMaxPerms());
             else
-                return new Permissions(roomRepo.getUserPermissions(roomId, userId));
+                perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
 
         } catch (SQLException ex) {
             Debug.log("RoomService: getUserPerms: "+ex);
-            return new Permissions(0);
+            return serverError(500, ex);
         }
+
+        var response = new UserPermsResponse(
+                true,
+                perms,
+                "");
+        return new Result<UserPermsResponse>(200, response);
     }
 
     private Result<?> serverError(int httpCode, Exception ex) {

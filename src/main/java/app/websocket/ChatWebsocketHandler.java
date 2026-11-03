@@ -1,18 +1,18 @@
 package app.websocket;
 
 import app.auth.AuthService;
-import app.auth.dto.response.AuthenticationResponse;
 import app.chat.ChatService;
-import app.dto.response.ErrorResponse;
-import app.dto.response.GenericResponse;
 import app.logging.Debug;
 import app.dto.Cookies;
-import app.session.Session;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
 import app.websocket.dto.request.JoinRoomRequest;
 import app.websocket.dto.request.SendMessageRequest;
+import app.auth.dto.response.AuthenticationResponse;
+import app.dto.response.ErrorResponse;
+
 import com.google.gson.*;
+
 import org.java_websocket.server.WebSocketServer;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -29,8 +29,9 @@ public class ChatWebsocketHandler extends WebSocketServer {
     private final ChatService chatService;
     private final Gson gson;
 
-    private final HashMap<WebSocket, Session> connectionsAuthenticated = new HashMap<>();
-    private final HashSet<WebSocket> connections = new HashSet<>();
+    private final HashMap<WebSocket, String> connToUserId = new HashMap<>();
+    private final HashMap<WebSocket, String> connectionsAuthenticated = new HashMap<>();
+    private final HashSet<WebSocket> waiting = new HashSet<>();
 
     public ChatWebsocketHandler(int port, AuthService authService, ChatService chatService) {
         super(new InetSocketAddress(port));
@@ -41,7 +42,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
     @Override
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        connections.add(conn);
+        waiting.add(conn);
         String cookieHeader = handshake.getFieldValue("Cookie");
 
         HashMap<String, String> cookies = Cookies.parse(cookieHeader);
@@ -49,7 +50,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         String token = cookies.get("session_token");
 
         Object response = authService.authenticate(token).response();
-        if (!(response instanceof AuthenticationResponse(boolean success, Session session, String message))) {
+        if (!(response instanceof AuthenticationResponse(boolean success, String userId, String message))) {
 
             if (!(response instanceof ErrorResponse errorResponse)) return;
             conn.close(4001, errorResponse.error());
@@ -63,27 +64,38 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
         connectionsAuthenticated.put(
                 conn,
-                session
+                token
         );
+        connToUserId.put(
+                conn,
+                userId
+        );
+
+        waiting.remove(conn);
     }
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
         if (connectionsAuthenticated.containsKey(conn)) chatService.userLeft(connectionsAuthenticated.get(conn));
-        connections.remove(conn);
+        waiting.remove(conn);
         connectionsAuthenticated.remove(conn);
+        connToUserId.remove(conn);
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        Session session = connectionsAuthenticated.get(conn);
-        if (session == null) return;
-        Long expiresAt = session.expiresAtMillis();
+        String token = connectionsAuthenticated.get(conn);
+        Object authResponse = authService.authenticate(token).response();
+        if (!(authResponse instanceof AuthenticationResponse(boolean authSuccess, String userId, String authMessage))) {
 
-        boolean sessionActive;
-        if (expiresAt == null) sessionActive = true;
-        else sessionActive = expiresAt > System.currentTimeMillis();
-        if (!sessionActive) return;
+            if (!(authResponse instanceof ErrorResponse errorResponse)) return;
+            conn.close(4001, errorResponse.error());
+            return;
+        }
+        if (!authSuccess) {
+            conn.close(4001, authMessage);
+            return;
+        }
 
         if (message == null) return;
         JsonObject json = JsonParser.parseString(message).getAsJsonObject();
@@ -92,7 +104,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         try {
             type = json.get("t").getAsInt();
         } catch (NumberFormatException | NullPointerException | UnsupportedOperationException ex) {
-            Debug.log("ChatWebsocketHandler: onMessage: Suspicious message coming from user Id: "+ session.userId() +", message:"+ message);
+            Debug.log("ChatWebsocketHandler: onMessage: Suspicious message coming from user Id: "+ userId +", message:"+ message);
             return;
         }
 
@@ -104,12 +116,12 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 try {
                     request = gson.fromJson(message, JoinRoomRequest.class);
                 } catch (JsonSyntaxException ex) {
-                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.userId());
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ userId);
                     return;
                 }
 
-                GenericResponse response = chatService.joinRoom(
-                        session,
+                Object response = chatService.joinRoom(
+                        userId,
                         request.getRoom()
                 );
                 sendTo(conn, SERVER_RESPONSE.code, response);
@@ -119,17 +131,21 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 try {
                     request = gson.fromJson(message, SendMessageRequest.class);
                 } catch (JsonSyntaxException ex) {
-                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.userId());
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ userId);
                     return;
                 }
 
-                MessageDispatch<?> response = chatService.sendMessage(
-                        session,
+                MessageDispatch<?, ?> dispatch = chatService.sendMessage(
+                        userId,
                         request.getRoom(),
                         request.getMessageId(),
                         request.getMessage()
                 );
-                sendTo(response.recipients(), MessageType.INCOMING_MESSAGE.code, response.response());
+
+                sendTo(conn, SERVER_RESPONSE.code, dispatch.responseToSender());
+
+                if (dispatch.recipients() == null) return;
+                sendTo(dispatch.recipients(), MessageType.INCOMING_MESSAGE.code, dispatch.messageToRecipients());
             }
             default -> {}
         }
@@ -155,34 +171,27 @@ public class ChatWebsocketHandler extends WebSocketServer {
         conn.send(payload);
     }
 
-    public void sendTo(List<Session> recipients, double type, Object message) {
+    public void sendTo(List<String> recipients, double type, Object message) {
         HashMap<String, Object> data = new HashMap<>();
         data.put("t", type);
         data.put("data", message);
         String payload = gson.toJson(data);
 
         for (WebSocket conn : connectionsAuthenticated.keySet()) {
-            Session sesh = connectionsAuthenticated.get(conn);
-            for (Session session : recipients) {
-                if (!sesh.sessionId().equals(session.sessionId())) continue;
+            String userId = connToUserId.get(conn);
 
-                if (conn == null || !conn.isOpen()) continue;
+            for (String recipientUserId : recipients) {
+                if (!userId.equals(recipientUserId)) continue;
+
+                if (conn == null || !conn.isOpen()) return;
                 conn.send(payload);
             }
         }
     }
 
     private void disconnectUnauthenticated(int code, String message) {
-        for (WebSocket conn : connections) {
-            if (!connectionsAuthenticated.containsKey(conn))
-                conn.close(code, message);
-        }
-    }
-
-    private void disconnectAll(int code, String message) {
-        for (WebSocket conn : connections) {
+        for (WebSocket conn : waiting) {
             conn.close(code, message);
         }
     }
-
 }

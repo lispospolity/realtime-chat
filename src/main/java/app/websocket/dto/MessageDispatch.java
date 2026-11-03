@@ -1,6 +1,7 @@
 package app.websocket.dto;
 
-import app.session.Session;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
@@ -8,7 +9,8 @@ import java.util.List;
  * recipients requires session Objects
  */
 
-public record MessageDispatch<E> (
-    List<Session> recipients,
-    E response
+public record MessageDispatch<E, F> (
+        @Nullable List<String> recipients,
+        @Nullable E messageToRecipients,
+        @NotNull F responseToSender
 ) {}
