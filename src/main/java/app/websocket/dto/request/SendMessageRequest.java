@@ -1,6 +1,8 @@
 package app.websocket.dto.request;
 
-public class SendMessageRequest {
+import app.dto.request.Request;
+
+public class SendMessageRequest implements Request {
     private int room;
     private String reqid;
     private String message;
