@@ -2,6 +2,7 @@ package app.websocket;
 
 import app.auth.AuthService;
 import app.chat.ChatService;
+import app.dto.response.Response;
 import app.logging.Debug;
 import app.dto.Cookies;
 import app.websocket.dto.MessageDispatch;
@@ -49,7 +50,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
         String token = cookies.get("session_token");
 
-        Object response = authService.authenticate(token).response();
+        Response response = authService.authenticate(token).response();
         if (!(response instanceof AuthenticationResponse(boolean success, String userId, String message))) {
 
             if (!(response instanceof ErrorResponse errorResponse)) return;

@@ -50,7 +50,7 @@ public class AuthService {
         this.sessionRepo = sessionRepository;
     }
 
-    public Result<?> login(String username, String password) {
+    public Result login(String username, String password) {
         String userId;
         String hash;
         try {
@@ -59,7 +59,7 @@ public class AuthService {
                 var response = new ErrorResponse(
                         false,
                         "Username or password is incorrect.");
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
             hash = userRepo.getPassword(userId);
         } catch (SQLException ex) { return serverError(500, ex); }
@@ -70,7 +70,7 @@ public class AuthService {
             var response = new ErrorResponse(
                     false,
                     "Username or password is incorrect.");
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
 
         String token = generateToken();
@@ -95,10 +95,10 @@ public class AuthService {
                 tokenExpiryInMillis/1000,
                 "Login successful."
         );
-        return new Result<LoginResponse>(200, response);
+        return new Result(200, response);
     }
 
-    public Result<?> logout(String sessionKey, @Nullable String sessionId) {
+    public Result logout(String sessionKey, @Nullable String sessionId) {
         byte[] sessionHash;
         String owner;
 
@@ -110,7 +110,7 @@ public class AuthService {
                         false,
                         "Incorrect, or expired session key."
                 );
-                return new Result<ErrorResponse>(401, response);
+                return new Result(401, response);
             }
             owner = sessionRepo.getUserIdBySessionKey(sessionHash);
             if (sessionId == null) sessionId = sessionRepo.getSessionIdBySessionKey(sessionHash);
@@ -120,7 +120,7 @@ public class AuthService {
                         false,
                         "Incorrect session id, or you're not the owner of this session."
                 );
-                return new Result<ErrorResponse>(401, response);
+                return new Result(401, response);
             }
 
             sessionRepo.deleteSessionBySessionId(sessionId);
@@ -133,11 +133,11 @@ public class AuthService {
                 true,
                 "Logout successful."
         );
-        return new Result<GenericResponse>(200, response);
+        return new Result(200, response);
     }
 
-    public Result<?> logoutAll(String sessionKey) {
-        Result<?> result = authenticate(sessionKey);
+    public Result logoutAll(String sessionKey) {
+        Result result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
         String userId = authResponse.userId();
 
@@ -151,10 +151,10 @@ public class AuthService {
                 true,
                 "Logout successful."
         );
-        return new Result<GenericResponse>(200, response);
+        return new Result(200, response);
     }
 
-    public Result<?> register(String username, String password) {
+    public Result register(String username, String password) {
         boolean userExists;
         try {
             userExists = userRepo.getId(username) != null;
@@ -164,7 +164,7 @@ public class AuthService {
             var response = new ErrorResponse(
                     false,
                     "Username already exists.");
-            return new Result<ErrorResponse>(409, response);
+            return new Result(409, response);
         }
 
         boolean nameLengthCorrect = !username.isBlank() && username.length() >= minNameLength && username.length() <= maxNameLength;
@@ -174,13 +174,13 @@ public class AuthService {
             var response = new ErrorResponse(
                     false,
                     "Password length is incorrect. Range: " + minPasswordLength + " - " + maxPasswordLength);
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
         if (!nameLengthCorrect) {
             var response = new ErrorResponse(
                     false,
                     "Name length is incorrect. Range: " + minNameLength + " - " + maxNameLength);
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
 
 
@@ -195,16 +195,16 @@ public class AuthService {
                 true,
                 "Account successfully made."
         );
-        return new Result<GenericResponse>(201, response);
+        return new Result(201, response);
     }
 
-    public Result<?> authenticate(@Nullable String sessionKey) {
+    public Result authenticate(@Nullable String sessionKey) {
         if (sessionKey == null) {
             var response = new ErrorResponse(
                     false,
                     "Session token cannot be null."
             );
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
 
         if (!sessions.containsKey(sessionKey)) return dbAuthenticate(sessionKey);
@@ -217,7 +217,7 @@ public class AuthService {
                     false,
                     "Incorrect, or expired session key."
             );
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
 
         var response = new AuthenticationResponse(
@@ -225,15 +225,15 @@ public class AuthService {
                 session.userId(),
                 "Successful authentication."
         );
-        return new Result<AuthenticationResponse>(200, response);
+        return new Result(200, response);
     }
 
-    private Result<?> dbAuthenticate(String sessionKey) {
+    private Result dbAuthenticate(String sessionKey) {
         if (sessionKey == null || sessionKey.isBlank()) {
             var response = new ErrorResponse(
                     false,
                     "Session key cookie cannot be empty.");
-            return new Result<ErrorResponse>(401, response);
+            return new Result(401, response);
         }
 
         try {
@@ -244,7 +244,7 @@ public class AuthService {
                         false,
                         "Incorrect, or expired session key."
                 );
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
             String userId = sessionRepo.getUserIdBySessionKey(tokenHash);
             if (userId == null) {
@@ -262,7 +262,7 @@ public class AuthService {
                     session.userId(),
                     "Successful authentication."
             );
-            return new Result<AuthenticationResponse>(200, response);
+            return new Result(200, response);
         } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
     }
 
@@ -273,12 +273,12 @@ public class AuthService {
         }
     }
 
-    private Result<?> serverError(int httpCode, Exception ex) {
+    private Result serverError(int httpCode, Exception ex) {
         Debug.log("AuthService:generic serverError(): "+ex.toString());
 
         var response = new ErrorResponse(
                 false,
                 "Internal Server Error");
-        return new Result<ErrorResponse>(httpCode, response);
+        return new Result(httpCode, response);
     }
 }

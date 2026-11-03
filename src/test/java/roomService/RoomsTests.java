@@ -52,7 +52,7 @@ public class RoomsTests {
 
     @Test
     void noPermsAddToRoom() {
-        Result<?> result = roomService.addToRoom(userNotInRoom, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
+        Result result = roomService.addToRoom(userNotInRoom, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
 
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
@@ -62,7 +62,7 @@ public class RoomsTests {
 
     @Test
     void badPermsAddToRoom() {
-        Result<?> result = roomService.addToRoom(testMemberNoPerms, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
+        Result result = roomService.addToRoom(testMemberNoPerms, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
 
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 

@@ -51,7 +51,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void loginSuccess() {
-        Result<?> result = authService.login("auth_testUser", "qwertyuiop");
+        Result result = authService.login("auth_testUser", "qwertyuiop");
         LoginResponse response =
                 Assertions.assertInstanceOf(LoginResponse.class, result.response());
 
@@ -63,7 +63,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void loginUserNonexistent() {
-        Result<?> result = authService.login("auth_nonexistent", "qwertyuiop");
+        Result result = authService.login("auth_nonexistent", "qwertyuiop");
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
@@ -74,7 +74,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void loginWrongPassword() {
-        Result<?> result = authService.login("auth_testUser", "");
+        Result result = authService.login("auth_testUser", "");
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
@@ -85,7 +85,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void logoutOneSuccess() {
-        Result<?> result = authService.logout(deleteMeToken, "auth_deleteMe");
+        Result result = authService.logout(deleteMeToken, "auth_deleteMe");
         GenericResponse response =
                 Assertions.assertInstanceOf(GenericResponse.class, result.response());
 
@@ -96,7 +96,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void logoutMe() {
-        Result<?> result = authService.logout(deleteMeToken, null);
+        Result result = authService.logout(deleteMeToken, null);
         GenericResponse response =
                 Assertions.assertInstanceOf(GenericResponse.class, result.response());
 
@@ -107,7 +107,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void logoutOneSeshTimedOut() {
-        Result<?> result = authService.logout(expiredToken, "auth_deleteMe");
+        Result result = authService.logout(expiredToken, "auth_deleteMe");
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
@@ -118,7 +118,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void logoutAllSuccess() {
-        Result<?> result = authService.logoutAll(deleteMeToken);
+        Result result = authService.logoutAll(deleteMeToken);
         GenericResponse response =
                 Assertions.assertInstanceOf(GenericResponse.class, result.response());
 
@@ -129,7 +129,7 @@ public class AuthServiceSessionsTests {
 
     @Test
     void logoutAllWrongKey() {
-        Result<?> result = authService.logoutAll(expiredToken);
+        Result result = authService.logoutAll(expiredToken);
         ErrorResponse response =
                 Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 

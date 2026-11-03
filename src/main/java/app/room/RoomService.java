@@ -17,7 +17,7 @@ public class RoomService {
         this.roomRepo = roomRepo;
     }
 
-    public Result<?> createRoom(String userId) {
+    public Result createRoom(String userId) {
         int roomId;
         try {
             roomId = roomRepo.create(userId, System.currentTimeMillis());
@@ -27,10 +27,10 @@ public class RoomService {
                 true,
                 roomId,
                 "Room successfully created.");
-        return new Result<CreateRoomResponse>(201, response);
+        return new Result(201, response);
     }
 
-    public Result<?> deleteRoom(String userId, int roomId) {
+    public Result deleteRoom(String userId, int roomId) {
         try {
 
             String ownerId = roomRepo.getOwner(roomId);
@@ -38,7 +38,7 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "This room either does not exist, or you are not the owner.");
-                return new Result<ErrorResponse>(401, response);
+                return new Result(401, response);
             }
 
             roomRepo.deleteRoom(roomId);
@@ -48,15 +48,15 @@ public class RoomService {
         var response = new ErrorResponse(
                 true,
                 "Successfully deleted the room.");
-        return new Result<ErrorResponse>(200, response);
+        return new Result(200, response);
     }
 
-    public Result<?> addToRoom(String userId, int roomId, String newMemberId, int permissions) {
+    public Result addToRoom(String userId, int roomId, String newMemberId, int permissions) {
         if (!Permissions.inBounds(permissions)) {
             var response = new ErrorResponse(
                     false,
                     "Permissions out of bounds.");
-            return new Result<ErrorResponse>(400, response);
+            return new Result(400, response);
         }
 
         try {
@@ -64,7 +64,7 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "This room does not exist.");
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
 
             Permissions perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
@@ -72,14 +72,14 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "You do not have the required permissions to add users.");
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
 
             if (roomRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
                         false,
                         "This user is already in the room.");
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
 
             roomRepo.addToRoom(roomId, newMemberId, permissions);
@@ -88,24 +88,24 @@ public class RoomService {
         var response = new GenericResponse(
                 true,
                 "Successfully added user to the room.");
-        return new Result<GenericResponse>(201, response);
+        return new Result(201, response);
     }
 
-    public Result<?> getUserPerms(int roomId, String userId) {
+    public Result getUserPerms(int roomId, String userId) {
         Permissions perms;
         try {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
                         false,
                         "This room does not exist.");
-                return new Result<ErrorResponse>(400, response);
+                return new Result(400, response);
             }
 
             if (!roomRepo.userInRoom(roomId, userId)) {
                 var response = new ErrorResponse(
                         false,
                         "You are not a member of this room.");
-                return new Result<ErrorResponse>(401, response);
+                return new Result(401, response);
             }
 
             if (userId.equals(roomRepo.getOwner(roomId)))
@@ -122,15 +122,15 @@ public class RoomService {
                 true,
                 perms,
                 "");
-        return new Result<UserPermsResponse>(200, response);
+        return new Result(200, response);
     }
 
-    private Result<?> serverError(int httpCode, Exception ex) {
+    private Result serverError(int httpCode, Exception ex) {
         Debug.log("RoomService:generic serverError(): "+ex.toString());
 
         var response = new ErrorResponse(
                 false,
                 "Internal Server Error");
-        return new Result<ErrorResponse>(httpCode, response);
+        return new Result(httpCode, response);
     }
 }

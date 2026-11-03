@@ -7,6 +7,7 @@ import app.auth.dto.request.RegisterRequest;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
+import app.dto.response.Response;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpHeaders;
@@ -30,7 +31,7 @@ public class AuthController {
 
     @PostMapping ("/api/users")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest request) {
-        Result<?> result = authService.register(request.username(), request.password());
+        Result result = authService.register(request.username(), request.password());
         return ResponseEntity
                 .status(result.httpCode())
                 .body(result.response());
@@ -39,7 +40,7 @@ public class AuthController {
 
     @PostMapping ("/api/sessions")
     public ResponseEntity<?>  loginUser(@Valid @RequestBody LoginRequest request) {
-        Result<?> result = authService.login(request.username(), request.password());
+        Result result = authService.login(request.username(), request.password());
 
         if (!(result.response() instanceof LoginResponse response)) {
             return ResponseEntity
@@ -81,7 +82,7 @@ public class AuthController {
                             false,
                             "Unauthorized access: session_token is null"));
         }
-        Result<?> result = authService.logout(sessionToken, sessionId);
+        Result result = authService.logout(sessionToken, sessionId);
 
         return ResponseEntity
                 .status(result.httpCode())
@@ -100,7 +101,7 @@ public class AuthController {
                             false,
                             "Unauthorized access: session_token is null"));
         }
-        Result<?> result = authService.logout(sessionToken, null);
+        Result result = authService.logout(sessionToken, null);
 
         return ResponseEntity
                 .status(result.httpCode())
@@ -120,7 +121,7 @@ public class AuthController {
                             false,
                             "Unauthorized access: session_token is null"));
         }
-        Result<?> result = authService.logoutAll(sessionToken);
+        Result result = authService.logoutAll(sessionToken);
         return ResponseEntity
                 .status(result.httpCode())
                 .body(result.response());

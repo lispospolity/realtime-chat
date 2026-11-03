@@ -1,7 +1,8 @@
 package app.auth.dto;
 
-public record Result<T>(
+import app.dto.response.Response;
+
+public record Result(
         int httpCode,
-        T response
-) {
-}
+        Response response
+) {}

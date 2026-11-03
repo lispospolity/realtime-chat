@@ -41,7 +41,7 @@ public class AuthServiceUserTests {
 
     @Test
     void regExistingUser() throws SQLException {
-        Result<?> result = authService.register("auth_testUser", "qwertyuiop");
+        Result result = authService.register("auth_testUser", "qwertyuiop");
         boolean requestFailed =
                 result.httpCode() == 409 &&
                 Objects.equals("d11c5281-afe0-485d-ae55-b3588392f1c8", userRepo.getId("auth_testUser"));
@@ -51,7 +51,7 @@ public class AuthServiceUserTests {
 
     @Test
     void regIncorrectPassword() throws SQLException {
-        Result<?> result = authService.register("auth_wrongPassword", "");
+        Result result = authService.register("auth_wrongPassword", "");
         boolean requestFailed = result.httpCode() == 400 && userRepo.getId("auth_wrongPassword") == null;
 
         Assertions.assertTrue(requestFailed);
@@ -59,7 +59,7 @@ public class AuthServiceUserTests {
 
     @Test
     void regIncorrectUsername() throws SQLException {
-        Result<?> result = authService.register("", "qwertyuiop");
+        Result result = authService.register("", "qwertyuiop");
         boolean requestFailed = result.httpCode() == 400 && userRepo.getId("") == null;
 
         Assertions.assertTrue(requestFailed);
@@ -68,7 +68,7 @@ public class AuthServiceUserTests {
 
     @Test
     void regNewUser() throws SQLException {
-        Result<?> result = authService.register("auth_newTestUser", "qwertyuiop");
+        Result result = authService.register("auth_newTestUser", "qwertyuiop");
         boolean userAdded = result.httpCode() == 201 && userRepo.getId("auth_newTestUser") != null;
 
         Assertions.assertTrue(userAdded);
