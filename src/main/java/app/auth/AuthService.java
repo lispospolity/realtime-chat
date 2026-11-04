@@ -15,6 +15,7 @@ import static app.utils.TokenUtils.hashToken;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -73,17 +74,35 @@ public class AuthService {
             return new Result(400, response);
         }
 
-        String token = generateToken();
-        byte[] hashedToken;
-        try {
-            hashedToken = hashToken(token);
-        } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
-        String sessionId = UUID.randomUUID().toString();
+        //Retry loop for the absolutely unlikely (1/2^122) 500 error, which probably will never happen, but I wanted to make a check for it :)
+        String token = "";
+        String sessionId = "";
+        long timeNow = 0;
+        boolean created = false;
+        for (int i = 0; i < 3; i++) {
+            token = generateToken();
+            byte[] hashedToken;
+            try {
+                hashedToken = hashToken(token);
+            } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
+            sessionId = UUID.randomUUID().toString();
+            timeNow = System.currentTimeMillis();
 
-        long timeNow = System.currentTimeMillis();
-        try {
-            sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
-        } catch (SQLException ex) { return serverError(500, ex); }
+            try {
+                sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
+                created = true;
+            } catch (SQLIntegrityConstraintViolationException ex) {
+                continue;
+            } catch (SQLException ex) {
+                return serverError(500, ex);
+            }
+        }
+
+        // If this happens, go buy a lottery ticket. Actually, don't.
+        // This is considerably less likely than you think.
+        if (!created) return serverError(500, new SQLIntegrityConstraintViolationException(
+                "Failed to generate unique session identifiers after 3 attempts. "
+                + "At this point, the universe is probably messing with us."));
 
         Session session = new Session(userId, sessionId, timeNow + tokenExpiryInMillis);
         sessions.put(token, session);
