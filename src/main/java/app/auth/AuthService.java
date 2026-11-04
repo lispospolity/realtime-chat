@@ -204,11 +204,24 @@ public class AuthService {
 
 
         String hash = BCrypt.hashpw(password, BCrypt.gensalt());
-        String userId = UUID.randomUUID().toString();
 
-        try {
-            userRepo.create(userId, username, hash, System.currentTimeMillis());
-        } catch (SQLException ex) { return serverError(500, ex); }
+        //Similar "issue" like with session creation
+        boolean created = false;
+        for (int i = 0; i < 3; i++) {
+            String userId = UUID.randomUUID().toString();
+            try {
+                userRepo.create(userId, username, hash, System.currentTimeMillis());
+                created = true;
+            } catch (SQLIntegrityConstraintViolationException ex) {
+                Debug.log("Well this has 1/2^122 chances of happening.");
+                continue;
+            } catch (SQLException ex) {
+                return serverError(500, ex);
+            }
+        }
+        if (!created) return serverError(500, new SQLIntegrityConstraintViolationException(
+                "Similarly to session creation, this just doesn't happen, what did you do to piss off the man upstairs?"
+        ));
 
         var response = new GenericResponse(
                 true,
