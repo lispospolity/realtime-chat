@@ -22,7 +22,7 @@ public class ChatService {
     }
 
     public @NotNull Object joinRoom(String userId, int roomId) {
-        Object response = roomService.getUserPerms(roomId, userId).response();
+        Object response = roomService.getUserPerms(userId, roomId).response();
         if (!(response instanceof UserPermsResponse(boolean success, Permissions perms, String message)))
             return response;
 

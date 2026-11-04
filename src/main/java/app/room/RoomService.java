@@ -6,8 +6,11 @@ import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
 import app.room.dto.CreateRoomResponse;
+import app.room.dto.UserRoomsResponse;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
+import java.util.List;
 
 @Service
 public class RoomService {
@@ -17,7 +20,7 @@ public class RoomService {
         this.roomRepo = roomRepo;
     }
 
-    public Result createRoom(String userId) {
+    public Result createRoom(@NotNull String userId) {
         int roomId;
         try {
             roomId = roomRepo.create(userId, System.currentTimeMillis());
@@ -30,7 +33,7 @@ public class RoomService {
         return new Result(201, response);
     }
 
-    public Result deleteRoom(String userId, int roomId) {
+    public Result deleteRoom(@NotNull String userId, int roomId) {
         try {
             String ownerId = roomRepo.getOwner(roomId);
             if (ownerId == null || ownerId.equals(userId)) {
@@ -50,7 +53,10 @@ public class RoomService {
         return new Result(200, response);
     }
 
-    public Result addToRoom(String userId, int roomId, String newMemberId, int permissions) {
+    /**
+     * newMemberId needs to be authenticated before reaching this point
+     */
+    public Result addToRoom(@NotNull String userId, int roomId, String newMemberId, int permissions) {
         if (!Permissions.inBounds(permissions)) {
             var response = new ErrorResponse(
                     false,
@@ -90,7 +96,7 @@ public class RoomService {
         return new Result(201, response);
     }
 
-    public Result getUserPerms(int roomId, String userId) {
+    public Result getUserPerms(@NotNull String userId, int roomId) {
         Permissions perms;
         try {
             if (!roomRepo.roomExists(roomId)) {
@@ -122,6 +128,19 @@ public class RoomService {
                 perms,
                 "");
         return new Result(200, response);
+    }
+
+    public Result getUserRooms(@NotNull String userId) {
+        try {
+            List<Integer> rooms = roomRepo.getUserRooms(userId);
+
+            var response = new UserRoomsResponse(
+                    true,
+                    rooms,
+                    "");
+            return new Result(200, response);
+
+        } catch (SQLException ex) { return serverError(500, ex); }
     }
 
     private Result serverError(int httpCode, Exception ex) {
