@@ -32,7 +32,6 @@ public class RoomService {
 
     public Result deleteRoom(String userId, int roomId) {
         try {
-
             String ownerId = roomRepo.getOwner(roomId);
             if (ownerId == null || ownerId.equals(userId)) {
                 var response = new ErrorResponse(
