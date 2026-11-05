@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.List;
 
 public class RoomRepoTest {
     private final static Path testEnvDir = Paths.get("src/test/resources/.env.db.test");
@@ -87,7 +88,21 @@ public class RoomRepoTest {
         Assertions.assertNull(testRepo.getOwner(0));
     }
 
+    @Test
+    void getOwnedRooms() throws SQLException {
+        List<Integer> resultedList = testRepo.getUserOwnedRooms("repo_testId");
 
+        Assertions.assertTrue(resultedList.contains(emptyRoom));
+        Assertions.assertTrue(resultedList.contains(fullRoom));
+    }
+
+    @Test
+    void getUserRooms() throws SQLException {
+        List<Integer> resultedList = testRepo.getUserRooms("repo_roomMember");
+
+        Assertions.assertFalse(resultedList.contains(emptyRoom));
+        Assertions.assertTrue(resultedList.contains(fullRoom));
+    }
 
     @Test
     void addNewMember() throws SQLException{

@@ -142,6 +142,25 @@ public class RoomRepository {
         }
     }
 
+    public List<Integer> getUserOwnedRooms(String userId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT room_id FROM rooms WHERE
+                     created_by = ?;
+                     """)
+        ) {
+            statement.setString(1, userId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            List<Integer> rooms = new ArrayList<>();
+            while (resultSet.next()) {
+                rooms.add(resultSet.getInt(1));
+            }
+            return rooms;
+        }
+    }
+
     public int getUserPermissions(int roomId, String userId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
