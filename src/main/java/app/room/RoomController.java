@@ -33,9 +33,7 @@ public class RoomController {
     }
 
     @PostMapping("/api/rooms")
-    public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                        @RequestParam(defaultValue = "false") boolean owner
-    ) {
+    public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
             return ResponseEntity
@@ -44,7 +42,6 @@ public class RoomController {
         }
         String userId = authResponse.userId();
 
-        //if else waiting for roomService and roomRepository getOwnedRooms
         Result roomResult = roomService.createRoom(userId);
         return ResponseEntity
                 .status(roomResult.httpCode())
