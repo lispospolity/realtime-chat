@@ -20,10 +20,16 @@ public class RoomService {
         this.roomRepo = roomRepo;
     }
 
+    /**
+     * Creating rooms adds 2 records to tables:
+     * 1. rooms (obviously),
+     * 2. room_members as a member with all privileges
+     */
     public Result createRoom(@NotNull String userId) {
         int roomId;
         try {
             roomId = roomRepo.create(userId, System.currentTimeMillis());
+            roomRepo.addToRoom(roomId, userId, Permissions.getMaxPerms());
         } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new CreateRoomResponse(
@@ -119,7 +125,6 @@ public class RoomService {
                 perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
 
         } catch (SQLException ex) {
-            Debug.log("RoomService: getUserPerms: "+ex);
             return serverError(500, ex);
         }
 
