@@ -143,6 +143,19 @@ public class RoomService {
         } catch (SQLException ex) { return serverError(500, ex); }
     }
 
+    public Result getUserOwnedRooms(@NotNull String userId) {
+        try {
+            List<Integer> rooms = roomRepo.getUserOwnedRooms(userId);
+
+            var response = new UserRoomsResponse(
+                    true,
+                    rooms,
+                    "");
+            return new Result(200, response);
+
+        } catch (SQLException ex) { return serverError(500, ex); }
+    }
+
     private Result serverError(int httpCode, Exception ex) {
         Debug.log("RoomService:generic serverError(): "+ex.toString());
 
