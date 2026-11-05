@@ -18,7 +18,7 @@ public class RoomController {
 
     @GetMapping("/api/rooms")
     public ResponseEntity<?> getRooms(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                      @RequestParam(defaultValue = "false") boolean owner
+                                      @RequestParam(name = "owner", defaultValue = "false") boolean owner
     ) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
