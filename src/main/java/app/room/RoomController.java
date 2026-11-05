@@ -4,9 +4,7 @@ import app.auth.AuthService;
 import app.auth.dto.Result;
 import app.auth.dto.response.AuthenticationResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class RoomController {
@@ -18,7 +16,7 @@ public class RoomController {
         this.roomService = roomService;
     }
 
-    @GetMapping ("/api/rooms")
+    @GetMapping("/api/rooms")
     public ResponseEntity<?> getRooms(@CookieValue(name = "session_token", required = false) String sessionToken) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
@@ -29,6 +27,25 @@ public class RoomController {
         String userId = authResponse.userId();
 
         Result roomResult = roomService.getUserRooms(userId);
+        return ResponseEntity
+                .status(roomResult.httpCode())
+                .body(roomResult.response());
+    }
+
+    @PostMapping("/api/rooms")
+    public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                        @RequestParam(defaultValue = "false") boolean owner
+    ) {
+        Result authResult = authService.authenticate(sessionToken);
+        if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
+            return ResponseEntity
+                    .status(authResult.httpCode())
+                    .body(authResult.response());
+        }
+        String userId = authResponse.userId();
+
+        //if else waiting for roomService and roomRepository getOwnedRooms
+        Result roomResult = roomService.createRoom(userId);
         return ResponseEntity
                 .status(roomResult.httpCode())
                 .body(roomResult.response());
