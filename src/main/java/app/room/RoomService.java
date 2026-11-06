@@ -42,7 +42,7 @@ public class RoomService {
     public Result deleteRoom(@NotNull String userId, int roomId) {
         try {
             String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId == null || ownerId.equals(userId)) {
+            if (ownerId == null || !ownerId.equals(userId)) {
                 var response = new ErrorResponse(
                         false,
                         "This room either does not exist, or you are not the owner.");
