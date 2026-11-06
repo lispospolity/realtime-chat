@@ -136,7 +136,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
                     return;
                 }
 
-                MessageDispatch<?, ?> dispatch = chatService.sendMessage(
+                MessageDispatch<?> dispatch = chatService.sendMessage(
                         userId,
                         request.getRoom(),
                         request.getMessageId(),

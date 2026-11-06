@@ -45,7 +45,7 @@ public class ChatService {
     }
 
 
-    public @NotNull MessageDispatch<?, ?> sendMessage(String userId, int roomId, String messageId, String message) {
+    public @NotNull MessageDispatch<?> sendMessage(String userId, int roomId, String messageId, String message) {
         if (message == null || message.isBlank()) {
             return toSender(false, "Message cannot be empty.");
         }
@@ -81,7 +81,7 @@ public class ChatService {
 
         GenericResponse response = new GenericResponse(true, "Message successfully sent.");
 
-        return new MessageDispatch<OutgoingMessage, GenericResponse>(recipients, msg, response);
+        return new MessageDispatch<OutgoingMessage>(recipients, msg, response);
     }
 
     public void userLeft(String userId) {
@@ -91,7 +91,7 @@ public class ChatService {
     }
 
 
-    private MessageDispatch<Void, ErrorResponse> toSender(boolean success, String message) {
-        return new MessageDispatch<Void, ErrorResponse>(null, null, new ErrorResponse(success, message));
+    private MessageDispatch<Void> toSender(boolean success, String message) {
+        return new MessageDispatch<Void>(null, null, new ErrorResponse(success, message));
     }
 }
