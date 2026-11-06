@@ -56,4 +56,21 @@ public class RoomController {
                 .body(roomResult.response());
     }
 
+    @DeleteMapping("/api/rooms/{id}")
+    public ResponseEntity<?> removeRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                        @PathVariable(value = "id", required = true) int roomId
+    ) {
+        Result authResult = authService.authenticate(sessionToken);
+        if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
+            return ResponseEntity
+                    .status(authResult.httpCode())
+                    .body(authResult.response());
+        }
+        String userId = authResponse.userId();
+
+        Result roomResult = roomService.deleteRoom(userId, roomId);
+        return ResponseEntity
+                .status(roomResult.httpCode())
+                .body(roomResult.response());
+    }
 }
