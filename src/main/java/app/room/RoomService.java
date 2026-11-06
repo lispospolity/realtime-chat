@@ -108,15 +108,15 @@ public class RoomService {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
                         false,
-                        "This room does not exist.");
-                return new Result(400, response);
+                        "This room does not exist");
+                return new Result(404, response);
             }
 
             if (!roomRepo.userInRoom(roomId, userId)) {
                 var response = new ErrorResponse(
                         false,
-                        "You are not a member of this room.");
-                return new Result(401, response);
+                        "You're not a member of this room.");
+                return new Result(403, response);
             }
 
             if (userId.equals(roomRepo.getOwner(roomId)))
