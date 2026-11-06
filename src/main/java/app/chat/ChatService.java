@@ -2,6 +2,7 @@ package app.chat;
 
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
+import app.dto.response.Response;
 import app.room.Permissions;
 import app.room.RoomService;
 import app.room.dto.UserPermsResponse;
@@ -21,23 +22,26 @@ public class ChatService {
         this.roomService = roomService;
     }
 
-    public @NotNull Object joinRoom(String userId, int roomId) {
-        Object response = roomService.getUserPerms(userId, roomId).response();
+    public @NotNull Response joinRoom(String userId, int roomId) {
+        Response response = roomService.getUserPerms(userId, roomId).response();
         if (!(response instanceof UserPermsResponse(boolean success, Permissions perms, String message)))
             return response;
 
         if (!success)
             return response;
 
-        if (rooms.containsKey(roomId)) {
+        if (rooms.containsKey(roomId) && rooms.get(roomId).containsKey(userId)) {
+            return new ErrorResponse(false, "You are already in this room!");
+        } else if (rooms.containsKey(roomId)) {
             rooms.get(roomId).put(userId, perms);
-        } else {
+        }
+        else {
             HashMap<String, Permissions> innerMap = new HashMap<>();
             innerMap.put(userId, perms);
 
             rooms.put(roomId, innerMap);
         }
-        return new GenericResponse(true, "Successfully joined a room.");
+        return new GenericResponse(true, "Successfully connected to the room.");
     }
 
 
