@@ -1,5 +1,7 @@
 package app.utils;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -20,7 +22,7 @@ public class TokenUtils {
                 .encodeToString(bytes);
     }
 
-    public static byte[] hashToken(String token) throws NoSuchAlgorithmException {
+    public static byte[] hashToken(@NotNull String token) throws NoSuchAlgorithmException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return digest.digest(token.getBytes(StandardCharsets.UTF_8));
     }
