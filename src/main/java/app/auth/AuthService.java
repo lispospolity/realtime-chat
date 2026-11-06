@@ -28,6 +28,8 @@ import org.mindrot.jbcrypt.BCrypt;
 
 @Service
 public class AuthService {
+    private static final String DUMMY_HASH = "$2a$10$nD7B2O4X8vIMPT/I0rIAwuB9DTuB8kHe4dAHk80KKGcs5jucRbR3a";
+
     private final int minNameLength;
     private final int maxNameLength;
     private final int minPasswordLength;
@@ -57,6 +59,8 @@ public class AuthService {
         try {
             userId = userRepo.getId(username);
             if (userId == null) {
+                BCrypt.checkpw(password, DUMMY_HASH);
+
                 var response = new ErrorResponse(
                         false,
                         "Username or password is incorrect.");
