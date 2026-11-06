@@ -122,20 +122,14 @@ public class AuthService {
     }
 
     public Result logout(String sessionKey, @Nullable String sessionId) {
-        byte[] sessionHash;
-        String owner;
+        Result result = authenticate(sessionKey);
+        if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
+        String owner = authResponse.userId();
 
+        byte[] sessionHash;
         try {
             sessionHash = hashToken(sessionKey);
 
-            if (sessionRepo.tokenExpired(sessionHash, System.currentTimeMillis())) {
-                var response = new ErrorResponse(
-                        false,
-                        "Incorrect, or expired session key."
-                );
-                return new Result(401, response);
-            }
-            owner = sessionRepo.getUserIdBySessionKey(sessionHash);
             if (sessionId == null) sessionId = sessionRepo.getSessionIdBySessionKey(sessionHash);
 
             if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
