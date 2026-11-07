@@ -41,4 +41,19 @@ public class PermissionsTest {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new Permissions(belowMinPayload));
     }
 
+    @Test
+    void crunch() {
+        int requester = 7;
+        int newInt = Permissions.getMaxPerms();
+
+        Permissions requesterPerms = new Permissions(requester);
+        Permissions newPerms = new Permissions(newInt);
+
+        newPerms.crunchTo(requesterPerms);
+
+        Assertions.assertEquals(requester, newPerms.intValue());
+
+        Assertions.assertEquals(requester, requesterPerms.intValue());
+    }
+
 }

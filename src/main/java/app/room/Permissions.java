@@ -9,6 +9,8 @@ public class Permissions {
     public static final int CHANGE_PERMISSIONS = 1<<5;
 
     private int permissions;
+    public int intValue() { return permissions; }
+
     public Permissions(int perms) throws IllegalArgumentException {
         if (!inBounds(perms)) throw new IllegalArgumentException("Permissions out of bounds.");
         this.permissions = perms;
@@ -16,6 +18,13 @@ public class Permissions {
 
     public boolean allow(int desiredPerm) {
         return (permissions & desiredPerm) != 0;
+    }
+
+    /**
+     * CrunchTo is a method used to crunch the permissions object to only the permissions of the requesterPerms param.
+     */
+    public void crunchTo(Permissions requesterPerms) {
+        this.permissions &= requesterPerms.intValue();
     }
 
     public static int getMaxPerms() {
