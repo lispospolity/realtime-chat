@@ -46,7 +46,7 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "This room either does not exist, or you are not the owner.");
-                return new Result(401, response);
+                return new Result(404, response);
             }
 
             roomRepo.deleteRoom(roomId);
@@ -75,7 +75,7 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "This room does not exist.");
-                return new Result(400, response);
+                return new Result(404, response);
             }
 
             Permissions perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
@@ -83,14 +83,14 @@ public class RoomService {
                 var response = new ErrorResponse(
                         false,
                         "You do not have the required permissions to add users.");
-                return new Result(400, response);
+                return new Result(403, response);
             }
 
             if (roomRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
                         false,
                         "This user is already in the room.");
-                return new Result(400, response);
+                return new Result(409, response);
             }
 
             roomRepo.addToRoom(roomId, newMemberId, permissions);
