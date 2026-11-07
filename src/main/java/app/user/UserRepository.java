@@ -70,7 +70,7 @@ public class UserRepository {
     public @Nullable String getUserById(String userId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
-                SELECT * FROM users WHERE id = ?;
+                SELECT username FROM users WHERE id = ?;
                 """)
         ) {
             statement.setString(1, userId);

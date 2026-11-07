@@ -46,6 +46,12 @@ public class UserRepoTest {
     }
 
     @Test
+    void getNameById() throws SQLException {
+        Assertions.assertEquals("repo_testUser", testRepo.getUserById("repo_testId"));
+        Assertions.assertNull(testRepo.getUserById("repo_nonexistentUser"));
+    }
+
+    @Test
     void newUser() throws SQLException {
         String username = "repo_newTestUser";
         testRepo.create(
