@@ -84,6 +84,18 @@ public class RoomRepoTest {
     }
 
     @Test
+    void getMemberList() throws SQLException {
+        List<String> membersFull = testRepo.getRoomMembers(fullRoom);
+        List<String> membersEmpty = testRepo.getRoomMembers(emptyRoom);
+        System.out.println(membersFull);
+        System.out.println(membersEmpty);
+
+        Assertions.assertTrue(membersFull.contains("repo_roomMember"));
+
+        Assertions.assertFalse(membersEmpty.contains("repo_roomMember"));
+    }
+
+    @Test
     void getOwnerNoRoom() throws SQLException {
         Assertions.assertNull(testRepo.getOwner(0));
     }

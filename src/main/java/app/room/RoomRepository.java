@@ -161,6 +161,25 @@ public class RoomRepository {
         }
     }
 
+    public List<String> getRoomMembers(int roomId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                     SELECT user_id FROM room_members WHERE
+                     room_id = ?;
+                     """)
+        ) {
+            statement.setInt(1, roomId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            List<String> members = new ArrayList<>();
+            while (resultSet.next()) {
+                members.add(resultSet.getString(1));
+            }
+            return members;
+        }
+    }
+
     public int getUserPermissions(int roomId, String userId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
