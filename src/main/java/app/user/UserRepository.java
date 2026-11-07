@@ -66,5 +66,19 @@ public class UserRepository {
             return null;
         }
     }
+
+    public @Nullable String getUserById(String userId) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                SELECT * FROM users WHERE id = ?;
+                """)
+        ) {
+            statement.setString(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) return resultSet.getString(1);
+            return null;
+        }
+    }
 }
 
