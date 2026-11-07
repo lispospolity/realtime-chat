@@ -40,6 +40,24 @@ public class RoomController {
                 .body(roomResult.response());
     }
 
+    @GetMapping("/api/rooms/{id}/users")
+    public ResponseEntity<?> getRoomMembers(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                            @PathVariable(value = "id", required = true) int roomId
+    ) {
+        Result authResult = authService.authenticate(sessionToken);
+        if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
+            return ResponseEntity
+                    .status(authResult.httpCode())
+                    .body(authResult.response());
+        }
+        String userId = authResponse.userId();
+
+        Result roomResult = roomService.getRoomMembers(userId, roomId);
+        return ResponseEntity
+                .status(roomResult.httpCode())
+                .body(roomResult.response());
+    }
+
     @PostMapping("/api/rooms")
     public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken) {
         Result authResult = authService.authenticate(sessionToken);
