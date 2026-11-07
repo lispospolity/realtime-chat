@@ -15,7 +15,14 @@ public class UserService {
 
     public UserService(UserRepository userRepo) { this.userRepo = userRepo; }
 
-    public Result getUsernameById(@NotNull String userId) {
+    public Result getUsernameById(String userId) {
+        if (userId == null) {
+            var response = new ErrorResponse(
+                    false,
+                    "UserId cannot be null.");
+            return new Result(400, response);
+        }
+
         try {
             String username = userRepo.getUserById(userId);
 
