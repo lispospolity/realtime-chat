@@ -104,10 +104,24 @@ public class RoomsTests {
     void getRoomMembers_noPerms() {
         Result result = roomService.getRoomMembers(testMemberNoPerms, testingRoom);
 
+        RoomMembersResponse response = Assertions.assertInstanceOf(RoomMembersResponse.class, result.response());
+
+        Assertions.assertTrue(response.success());
+
+        Assertions.assertFalse(response.members().isEmpty());
+        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
+        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+    }
+
+    @Test
+    void getRoomMembers_notInRoom() {
+        Result result = roomService.getRoomMembers(userNotInRoom, testingRoom);
+
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("Your permissions don't allow for obtaining users from this room.", response.error());
+        Assertions.assertEquals("You're not a member of this room.", response.error());
     }
 
     @AfterEach

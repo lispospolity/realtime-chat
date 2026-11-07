@@ -105,18 +105,21 @@ public class RoomService {
     }
 
     public Result getRoomMembers(@NotNull String userId, int roomId) {
-        Result result = getUserPerms(userId, roomId);
-        if (!(result.response() instanceof UserPermsResponse permsResponse)) return result;
-        if (!permsResponse.success()) return result;
-
-        if (!permsResponse.perms().allow(Permissions.READ_MESSAGES)) {
-            var response = new ErrorResponse(
-                    false,
-                    "Your permissions don't allow for obtaining users from this room.");
-            return new Result(404, response);
-        }
-
         try {
+            if (!roomRepo.roomExists(roomId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist");
+                return new Result(404, response);
+            }
+
+            if (!roomRepo.userInRoom(roomId, userId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "You're not a member of this room.");
+                return new Result(403, response);
+            }
+
             List<String> members = roomRepo.getRoomMembers(roomId);
 
             var response = new RoomMembersResponse(
