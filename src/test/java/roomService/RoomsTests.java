@@ -53,7 +53,7 @@ public class RoomsTests {
     }
 
     @Test
-    void noPermsAddToRoom() {
+    void addToRoom_noPerms() {
         Result result = roomService.addToRoom(userNotInRoom, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
 
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
@@ -63,13 +63,33 @@ public class RoomsTests {
     }
 
     @Test
-    void badPermsAddToRoom() {
+    void addToRoom_badPerms() {
         Result result = roomService.addToRoom(testMemberNoPerms, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
 
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
         Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
+    }
+
+    @Test
+    void addToRoom_incorrectInputPerms() {
+        Result result = roomService.addToRoom(testMemberAllPerms, testingRoom, userNotInRoom, -1);
+
+        ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
+
+        Assertions.assertFalse(response.success());
+        Assertions.assertEquals("Permissions out of bounds.", response.error());
+    }
+
+    @Test
+    void addToRoom_userInRoom() {
+        Result result = roomService.addToRoom(testMemberAllPerms, testingRoom, testMemberNoPerms, Permissions.READ_MESSAGES);
+
+        ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
+
+        Assertions.assertFalse(response.success());
+        Assertions.assertEquals("This user is already in the room.", response.error());
     }
 
     @Test

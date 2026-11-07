@@ -1,7 +1,6 @@
 package app.room;
 
 import app.auth.dto.Result;
-import app.dto.response.Response;
 import app.room.dto.RoomMembersResponse;
 import app.room.dto.UserPermsResponse;
 import app.dto.response.ErrorResponse;
@@ -74,13 +73,15 @@ public class RoomService {
             }
 
             Permissions perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
-
             if (!perms.allow(Permissions.ADD_USERS)) {
                 var response = new ErrorResponse(
                         false,
                         "You do not have the required permissions to add users.");
                 return new Result(403, response);
             }
+
+            Permissions newMemberPermissions = new Permissions(permissions);
+            newMemberPermissions.crunchTo(perms);
 
             if (roomRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
