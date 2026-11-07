@@ -60,9 +60,9 @@ public class RoomService {
     }
 
     /**
-     * newMemberId needs to be authenticated before reaching this point
+     * newMemberId needs to be additionally authenticated before reaching this point
      */
-    public Result addToRoom(@NotNull String userId, int roomId, String newMemberId, int permissions) {
+    public Result addToRoom(@NotNull String userId, int roomId, @NotNull String newMemberId, int permissions) {
         try {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
