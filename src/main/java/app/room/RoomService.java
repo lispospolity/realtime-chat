@@ -1,6 +1,8 @@
 package app.room;
 
 import app.auth.dto.Result;
+import app.dto.response.Response;
+import app.room.dto.RoomMembersResponse;
 import app.room.dto.UserPermsResponse;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
@@ -102,6 +104,30 @@ public class RoomService {
         return new Result(201, response);
     }
 
+    public Result getRoomMembers(@NotNull String userId, int roomId) {
+        Result result = getUserPerms(userId, roomId);
+        if (!(result.response() instanceof UserPermsResponse permsResponse)) return result;
+        if (!permsResponse.success()) return result;
+
+        if (!permsResponse.perms().allow(Permissions.READ_MESSAGES)) {
+            var response = new ErrorResponse(
+                    false,
+                    "Your permissions don't allow for obtaining users from this room.");
+            return new Result(404, response);
+        }
+
+        try {
+            List<String> members = roomRepo.getRoomMembers(roomId);
+
+            var response = new RoomMembersResponse(
+                    true,
+                    members,
+                    "Successfully fetched room members."
+            );
+            return new Result(200, response);
+        } catch (SQLException ex) { return serverError(500, ex); }
+    }
+
     public Result getUserPerms(@NotNull String userId, int roomId) {
         Permissions perms;
         try {
@@ -124,9 +150,7 @@ public class RoomService {
             else
                 perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
 
-        } catch (SQLException ex) {
-            return serverError(500, ex);
-        }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new UserPermsResponse(
                 true,

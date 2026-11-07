@@ -8,6 +8,7 @@ import app.dto.response.ErrorResponse;
 import app.room.Permissions;
 import app.room.RoomRepository;
 import app.room.RoomService;
+import app.room.dto.RoomMembersResponse;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 
@@ -46,6 +47,7 @@ public class RoomsTests {
 
         testingRoom = roomRepo.create(testOwner, System.currentTimeMillis());
 
+        roomRepo.addToRoom(testingRoom, testOwner, Permissions.getMaxPerms()); //roomService does that
         roomRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
         roomRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
     }
@@ -68,6 +70,44 @@ public class RoomsTests {
 
         Assertions.assertFalse(response.success());
         Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
+    }
+
+    @Test
+    void getRoomMembers_owner() {
+        Result result = roomService.getRoomMembers(testOwner, testingRoom);
+
+        RoomMembersResponse response = Assertions.assertInstanceOf(RoomMembersResponse.class, result.response());
+
+        Assertions.assertTrue(response.success());
+
+        Assertions.assertFalse(response.members().isEmpty());
+        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
+        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+    }
+
+    @Test
+    void getRoomMembers_allPerms() {
+        Result result = roomService.getRoomMembers(testMemberAllPerms, testingRoom);
+
+        RoomMembersResponse response = Assertions.assertInstanceOf(RoomMembersResponse.class, result.response());
+
+        Assertions.assertTrue(response.success());
+
+        Assertions.assertFalse(response.members().isEmpty());
+        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
+        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+    }
+
+    @Test
+    void getRoomMembers_noPerms() {
+        Result result = roomService.getRoomMembers(testMemberNoPerms, testingRoom);
+
+        ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
+
+        Assertions.assertFalse(response.success());
+        Assertions.assertEquals("Your permissions don't allow for obtaining users from this room.", response.error());
     }
 
     @AfterEach
