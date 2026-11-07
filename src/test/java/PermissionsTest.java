@@ -32,5 +32,13 @@ public class PermissionsTest {
         Assertions.assertFalse(perms.allow(Permissions.CHANGE_PERMISSIONS));
     }
 
+    @Test
+    void outOfBounds() {
+        int aboveMaxPayload = Permissions.getMaxPerms()+1;
+        int belowMinPayload = -1;
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Permissions(aboveMaxPayload));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Permissions(belowMinPayload));
+    }
 
 }

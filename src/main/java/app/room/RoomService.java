@@ -63,13 +63,6 @@ public class RoomService {
      * newMemberId needs to be authenticated before reaching this point
      */
     public Result addToRoom(@NotNull String userId, int roomId, String newMemberId, int permissions) {
-        if (!Permissions.inBounds(permissions)) {
-            var response = new ErrorResponse(
-                    false,
-                    "Permissions out of bounds.");
-            return new Result(400, response);
-        }
-
         try {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
@@ -79,6 +72,7 @@ public class RoomService {
             }
 
             Permissions perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
+
             if (!perms.allow(Permissions.ADD_USERS)) {
                 var response = new ErrorResponse(
                         false,
@@ -94,7 +88,13 @@ public class RoomService {
             }
 
             roomRepo.addToRoom(roomId, newMemberId, permissions);
+        } catch (IllegalArgumentException ex) {
+            var response = new ErrorResponse(
+                    false,
+                    "Permissions out of bounds.");
+            return new Result(400, response);
         } catch (SQLException ex) { return serverError(500, ex); }
+
 
         var response = new GenericResponse(
                 true,

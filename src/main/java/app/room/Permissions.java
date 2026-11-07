@@ -9,7 +9,8 @@ public class Permissions {
     public static final int CHANGE_PERMISSIONS = 1<<5;
 
     private int permissions;
-    public Permissions(int perms) {
+    public Permissions(int perms) throws IllegalArgumentException {
+        if (!inBounds(perms)) throw new IllegalArgumentException("Permissions out of bounds.");
         this.permissions = perms;
     }
 
@@ -26,7 +27,7 @@ public class Permissions {
                 |CHANGE_PERMISSIONS;
     }
 
-    public static boolean inBounds(int perms) {
+    private static boolean inBounds(int perms) {
         return perms >= 0 && perms <= getMaxPerms();
     }
 }
