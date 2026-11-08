@@ -134,7 +134,7 @@ public class RoomService {
             Permissions newPerms = new Permissions(newPermissions);
             newPerms.crunchTo(requesterPerms);
 
-            roomMemberRepo.changePerms(roomId, existingMemberId, requesterPerms.intValue());
+            roomMemberRepo.changePerms(roomId, existingMemberId, newPerms.intValue());
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
