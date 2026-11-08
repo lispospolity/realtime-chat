@@ -95,7 +95,11 @@ public class AuthService {
             try {
                 sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
                 created = true;
+                break;
             } catch (SQLIntegrityConstraintViolationException ex) {
+                if (ex.getErrorCode() != 1062) return serverError(500, ex);
+
+                Debug.log("Well that's unexpected: " + ex);
                 continue;
             } catch (SQLException ex) {
                 return serverError(500, ex);
