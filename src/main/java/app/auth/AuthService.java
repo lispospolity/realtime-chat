@@ -171,16 +171,11 @@ public class AuthService {
         return new Result(200, response);
     }
 
-    public Result register(String username, String password) {
-        boolean userExists;
-        try {
-            userExists = userRepo.getId(username) != null;
-        } catch (SQLException ex) { return serverError(500, ex); }
-
-        if (userExists) {
+    public Result register(@Nullable String username, @Nullable String password) {
+        if (username == null || password == null) {
             var response = new ErrorResponse(
                     false,
-                    "Username already exists.");
+                    "Username, or password cannot be null.");
             return new Result(409, response);
         }
 
@@ -200,6 +195,17 @@ public class AuthService {
             return new Result(400, response);
         }
 
+        boolean userExists;
+        try {
+            userExists = userRepo.getId(username) != null;
+        } catch (SQLException ex) { return serverError(500, ex); }
+
+        if (userExists) {
+            var response = new ErrorResponse(
+                    false,
+                    "Username already exists.");
+            return new Result(409, response);
+        }
 
         String hash = BCrypt.hashpw(password, BCrypt.gensalt());
 
@@ -210,8 +216,11 @@ public class AuthService {
             try {
                 userRepo.create(userId, username, hash, System.currentTimeMillis());
                 created = true;
+                break;
             } catch (SQLIntegrityConstraintViolationException ex) {
-                Debug.log("Well this has 1/2^122 chances of happening.");
+                if (ex.getErrorCode() != 1062) return serverError(500, ex);
+
+                Debug.log("Well this has 1/2^122 chances of happening: " + ex);
                 continue;
             } catch (SQLException ex) {
                 return serverError(500, ex);
