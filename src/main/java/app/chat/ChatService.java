@@ -48,14 +48,14 @@ public class ChatService {
     public @NotNull MessageDispatch<?> sendMessage(String userId, int roomId, String messageId, String message) {
         if (message == null || message.isBlank()) {
             return toSender(false, "Message cannot be empty.");
-        }
+        } //this should live in messageService
 
         if (messageId == null || messageId.isBlank()) {
             return toSender(false, "MessageId cannot be empty.");
-        }
+        } //this should live in messageService
 
         if (!rooms.containsKey(roomId) || !rooms.get(roomId).containsKey(userId)) {
-            return toSender(false, "You don't have access to this room.");
+            return toSender(false, "You are not connected to this room.");
         }
         HashMap<String, Permissions> room = rooms.get(roomId);
         Permissions perms = room.get(userId);
