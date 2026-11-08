@@ -1,13 +1,13 @@
 package app.room;
 
 import app.dto.Result;
-import app.room.dto.RoomMembersResponse;
-import app.room.dto.UserPermsResponse;
+import app.room.dto.response.RoomMembersResponse;
+import app.room.dto.response.UserPermsResponse;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
-import app.room.dto.CreateRoomResponse;
-import app.room.dto.UserRoomsResponse;
+import app.room.dto.response.CreateRoomResponse;
+import app.room.dto.response.UserRoomsResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;

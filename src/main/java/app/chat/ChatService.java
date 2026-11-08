@@ -5,7 +5,7 @@ import app.dto.response.GenericResponse;
 import app.dto.response.Response;
 import app.room.Permissions;
 import app.room.RoomService;
-import app.room.dto.UserPermsResponse;
+import app.room.dto.response.UserPermsResponse;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.response.OutgoingMessage;
 import jakarta.validation.constraints.NotNull;

@@ -1,11 +1,9 @@
-package app.room.dto;
+package app.room.dto.response;
 
 import app.dto.response.Response;
 
-import java.util.List;
-
-public record UserRoomsResponse(
+public record CreateRoomResponse(
         boolean success,
-        List<Integer> rooms,
+        int roomId,
         String message
 ) implements Response {}

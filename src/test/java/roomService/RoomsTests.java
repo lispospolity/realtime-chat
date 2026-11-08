@@ -9,7 +9,7 @@ import app.room.Permissions;
 import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
 import app.room.RoomService;
-import app.room.dto.RoomMembersResponse;
+import app.room.dto.response.RoomMembersResponse;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 

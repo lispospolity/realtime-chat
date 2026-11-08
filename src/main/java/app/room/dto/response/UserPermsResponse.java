@@ -1,4 +1,4 @@
-package app.room.dto;
+package app.room.dto.response;
 
 import app.dto.response.Response;
 import app.room.Permissions;
