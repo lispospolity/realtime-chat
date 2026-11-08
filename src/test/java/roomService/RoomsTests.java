@@ -6,6 +6,7 @@ import app.config.Env;
 import app.database.DataSourceFactory;
 import app.dto.response.ErrorResponse;
 import app.room.Permissions;
+import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
 import app.room.RoomService;
 import app.room.dto.RoomMembersResponse;
@@ -23,6 +24,7 @@ public class RoomsTests {
     private static DataSource dataSource;
 
     private RoomRepository roomRepo;
+    private RoomMemberRepository roomMemberRepo;
     private RoomService roomService;
 
     private final String testOwner = "12345678-1234-1234-1234-b3588392f1c8";
@@ -43,13 +45,14 @@ public class RoomsTests {
     @BeforeEach
     void setupRoomService() throws SQLException {
         roomRepo = new RoomRepository(dataSource);
-        roomService = new RoomService(roomRepo);
+        roomMemberRepo = new RoomMemberRepository(dataSource);
+        roomService = new RoomService(roomRepo, roomMemberRepo);
 
         testingRoom = roomRepo.create(testOwner, System.currentTimeMillis());
-        roomRepo.addToRoom(testingRoom, testOwner, Permissions.getMaxPerms()); //roomService does that
+        roomMemberRepo.addToRoom(testingRoom, testOwner, Permissions.getMaxPerms()); //roomService does that
 
-        roomRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
-        roomRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
+        roomMemberRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
+        roomMemberRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
     }
 
     @Test

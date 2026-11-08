@@ -3,6 +3,7 @@ package database;
 import app.config.AppConfig;
 import app.config.Env;
 import app.database.DataSourceFactory;
+import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
 import org.junit.jupiter.api.*;
 
@@ -16,6 +17,8 @@ import java.util.List;
 public class RoomRepoTest {
     private final static Path testEnvDir = Paths.get("src/test/resources/.env.db.test");
     private static DataSource dataSource;
+
+    private RoomMemberRepository roomMemberRepo;
     private RoomRepository testRepo;
 
     private boolean cleanupNeeded = false;
@@ -33,12 +36,13 @@ public class RoomRepoTest {
 
     @BeforeEach
     void setupPreparedValues() throws SQLException {
+        roomMemberRepo = new RoomMemberRepository(dataSource);
         testRepo = new RoomRepository(dataSource);
 
         emptyRoom = testRepo.create("repo_testId", System.currentTimeMillis());
 
         fullRoom = testRepo.create("repo_testId", System.currentTimeMillis());
-        testRepo.addToRoom(fullRoom, "repo_roomMember", 1);
+        roomMemberRepo.addToRoom(fullRoom, "repo_roomMember", 1);
     }
 
     @Test
@@ -84,16 +88,6 @@ public class RoomRepoTest {
     }
 
     @Test
-    void getMemberList() throws SQLException {
-        List<String> membersFull = testRepo.getRoomMembers(fullRoom);
-        List<String> membersEmpty = testRepo.getRoomMembers(emptyRoom);
-
-        Assertions.assertTrue(membersFull.contains("repo_roomMember"));
-
-        Assertions.assertFalse(membersEmpty.contains("repo_roomMember"));
-    }
-
-    @Test
     void getOwnerNoRoom() throws SQLException {
         Assertions.assertNull(testRepo.getOwner(0));
     }
@@ -106,55 +100,6 @@ public class RoomRepoTest {
         Assertions.assertTrue(resultedList.contains(fullRoom));
     }
 
-    @Test
-    void getUserRooms() throws SQLException {
-        List<Integer> resultedList = testRepo.getUserRooms("repo_roomMember");
-
-        Assertions.assertFalse(resultedList.contains(emptyRoom));
-        Assertions.assertTrue(resultedList.contains(fullRoom));
-    }
-
-    @Test
-    void addNewMember() throws SQLException{
-        Assertions.assertEquals(0, testRepo.getUserPermissions(emptyRoom, "repo_roomMember"));
-
-        Assertions.assertDoesNotThrow(() -> testRepo.addToRoom(emptyRoom, "repo_roomMember", 1));
-
-        Assertions.assertEquals(1, testRepo.getUserPermissions(emptyRoom, "repo_roomMember"));
-    }
-
-    @Test
-    void addExistingMember() {
-        Assertions.assertThrows(SQLException.class, () -> {testRepo.addToRoom(fullRoom, "repo_roomMember", 1);});
-    }
-
-    @Test
-    void changeMemberPerms() throws SQLException {
-        Assertions.assertEquals(1, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
-
-        Assertions.assertDoesNotThrow(() -> testRepo.changePerms(fullRoom, "repo_roomMember", 7));
-
-        Assertions.assertEquals(7, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
-    }
-
-    @Test
-    void getUserPerms() throws SQLException {
-        Assertions.assertEquals(1, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
-    }
-
-    @Test
-    void getNonexistentPerms() throws SQLException {
-        Assertions.assertEquals(0, testRepo.getUserPermissions(emptyRoom, "repo_nonexistent"));
-    }
-
-    @Test
-    void removeMember() throws SQLException {
-        Assertions.assertEquals(1, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
-
-        Assertions.assertDoesNotThrow(() -> testRepo.removeFromRoom(fullRoom, "repo_roomMember"));
-
-        Assertions.assertEquals(0, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
-    }
 
     @AfterEach
     void cleanup() throws SQLException {

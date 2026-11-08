@@ -16,9 +16,11 @@ import java.util.List;
 @Service
 public class RoomService {
     private final RoomRepository roomRepo;
+    private final RoomMemberRepository roomMemberRepo;
 
-    public RoomService(RoomRepository roomRepo) {
+    public RoomService(RoomRepository roomRepo, RoomMemberRepository roomMemberRepo) {
         this.roomRepo = roomRepo;
+        this.roomMemberRepo = roomMemberRepo;
     }
 
     /**
@@ -30,7 +32,7 @@ public class RoomService {
         int roomId;
         try {
             roomId = roomRepo.create(userId, System.currentTimeMillis());
-            roomRepo.addToRoom(roomId, userId, Permissions.getMaxPerms());
+            roomMemberRepo.addToRoom(roomId, userId, Permissions.getMaxPerms());
         } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new CreateRoomResponse(
@@ -72,7 +74,7 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            Permissions perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
+            Permissions perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
             if (!perms.allow(Permissions.ADD_USERS)) {
                 var response = new ErrorResponse(
                         false,
@@ -83,14 +85,14 @@ public class RoomService {
             Permissions newMemberPermissions = new Permissions(permissions);
             newMemberPermissions.crunchTo(perms);
 
-            if (roomRepo.userInRoom(roomId, newMemberId)) {
+            if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
                         false,
                         "This user is already in the room.");
                 return new Result(409, response);
             }
 
-            roomRepo.addToRoom(roomId, newMemberId, permissions);
+            roomMemberRepo.addToRoom(roomId, newMemberId, permissions);
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
@@ -114,14 +116,14 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            if (!roomRepo.userInRoom(roomId, userId)) {
+            if (!roomMemberRepo.userInRoom(roomId, userId)) {
                 var response = new ErrorResponse(
                         false,
                         "You're not a member of this room.");
                 return new Result(403, response);
             }
 
-            List<String> members = roomRepo.getRoomMembers(roomId);
+            List<String> members = roomMemberRepo.getRoomMembers(roomId);
 
             var response = new RoomMembersResponse(
                     true,
@@ -142,7 +144,7 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            if (!roomRepo.userInRoom(roomId, userId)) {
+            if (!roomMemberRepo.userInRoom(roomId, userId)) {
                 var response = new ErrorResponse(
                         false,
                         "You're not a member of this room.");
@@ -152,7 +154,7 @@ public class RoomService {
             if (userId.equals(roomRepo.getOwner(roomId)))
                 perms = new Permissions(Permissions.getMaxPerms());
             else
-                perms = new Permissions(roomRepo.getUserPermissions(roomId, userId));
+                perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
 
         } catch (SQLException ex) { return serverError(500, ex); }
 
@@ -165,7 +167,7 @@ public class RoomService {
 
     public Result getUserRooms(@NotNull String userId) {
         try {
-            List<Integer> rooms = roomRepo.getUserRooms(userId);
+            List<Integer> rooms = roomMemberRepo.getUserRooms(userId);
 
             var response = new UserRoomsResponse(
                     true,
