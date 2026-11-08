@@ -48,7 +48,7 @@ public class RoomController {
 
     @GetMapping("/api/rooms/{id}/users")
     public ResponseEntity<?> getRoomMembers(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                            @PathVariable(value = "id", required = true) int roomId
+                                            @PathVariable(value = "id") int roomId
     ) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
@@ -82,8 +82,8 @@ public class RoomController {
 
     @PostMapping("/api/rooms/{roomId}/users/{userId}")
     public ResponseEntity<?> addToRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                       @PathVariable(value = "roomId", required = true) int roomId,
-                                       @PathVariable(value = "userId", required = true) String newMemberId,
+                                       @PathVariable(value = "roomId") int roomId,
+                                       @PathVariable(value = "userId") String newMemberId,
                                        @Valid @RequestBody RoomMemberConfigRequest request
                                        ) {
         Result authResult = authService.authenticate(sessionToken);
@@ -136,7 +136,7 @@ public class RoomController {
 
     @DeleteMapping("/api/rooms/{id}")
     public ResponseEntity<?> removeRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                        @PathVariable(value = "id", required = true) int roomId
+                                        @PathVariable(value = "id") int roomId
     ) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
