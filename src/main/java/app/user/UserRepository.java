@@ -20,7 +20,7 @@ public class UserRepository {
     public void create(String id, String name, String hash, Long createdAt) throws SQLException {
         Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
-                 INSERT INTO users(id, username, password, createdat)
+                 INSERT INTO users(id, username, password, created_at)
                  VALUES(?, ?, ?, ?);
                  """);
         statement.setString(1, id);
@@ -49,7 +49,7 @@ public class UserRepository {
         ) {
             statement.setString(1, name);
             ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getString("id");
+            if (resultSet.next()) return resultSet.getString(1);
             return null;
         }
     }

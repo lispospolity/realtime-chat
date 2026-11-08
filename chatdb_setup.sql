@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS chat.users (
     id        VARCHAR(36)  NOT NULL PRIMARY KEY,
     username  VARCHAR(30)  NOT NULL,
     password  VARCHAR(255) NOT NULL,
-    createdat BIGINT       NOT NULL,
+    created_at BIGINT       NOT NULL,
     CONSTRAINT uq_users_username
-        UNIQUE (username)
+        UNIQUE (username) -- this is temporary to make it possible to login by your name
 );
 
 CREATE TABLE IF NOT EXISTS chat.user_sessions (
@@ -58,9 +58,9 @@ CREATE TABLE IF NOT EXISTS chat_test.users (
     id        VARCHAR(36)  NOT NULL PRIMARY KEY,
     username  VARCHAR(30)  NOT NULL,
     password  VARCHAR(255) NOT NULL,
-    createdat BIGINT       NOT NULL,
-    CONSTRAINT uq_users_username
-        UNIQUE (username)
+    created_at BIGINT       NOT NULL,
+    CONSTRAINT uq_test_users_username
+        UNIQUE (username) -- this is temporary to make it possible to login by your name
 );
 
 CREATE TABLE IF NOT EXISTS chat_test.user_sessions (
@@ -69,9 +69,9 @@ CREATE TABLE IF NOT EXISTS chat_test.user_sessions (
     sesh_key   BINARY(32)   NOT NULL,
     created_at BIGINT       NOT NULL,
     expires_at BIGINT,
-    CONSTRAINT uq_user_sessions_sesh_key
+    CONSTRAINT uq_test_user_sessions_sesh_key
         UNIQUE (sesh_key),
-    CONSTRAINT fk_user_sessions_user_test
+    CONSTRAINT fk_test_user_sessions_user_id
         FOREIGN KEY (user_id) REFERENCES chat_test.users(id)
         ON DELETE CASCADE
 );
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS chat_test.rooms(
     room_id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     created_by VARCHAR(36) NOT NULL,
     created_at BIGINT      NOT NULL,
-    CONSTRAINT fk_createdby_rooms_user
+    CONSTRAINT fk_test_createdby_rooms_user
         FOREIGN KEY (created_by) REFERENCES chat_test.users(id)
 );
 
@@ -88,10 +88,10 @@ CREATE TABLE IF NOT EXISTS chat_test.room_members(
     room_id     INT UNSIGNED NOT NULL,
     user_id     VARCHAR(36)  NOT NULL,
     perms       INT UNSIGNED NOT NULL DEFAULT 0,
-    CONSTRAINT fk_room_id_rooms
+    CONSTRAINT fk_test_room_id_rooms
         FOREIGN KEY (room_id) REFERENCES chat_test.rooms(room_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_user_id_users
+    CONSTRAINT fk_test_user_id_users
         FOREIGN KEY (user_id) REFERENCES chat_test.users(id)
         ON DELETE CASCADE,
     PRIMARY KEY (room_id, user_id)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS chat_test.room_members(
 
 -- 3. Insert test users into chat_test.users and chat_test.user_sessions
 
-INSERT INTO chat_test.users (id, username, password, createdat)
+INSERT INTO chat_test.users (id, username, password, created_at)
 VALUES
 (
     'd11c5281-afe0-485d-ae55-b3588392f1c8',
@@ -163,7 +163,7 @@ VALUES
 (
     'auth_deleteAll',
     'd11c5281-afe0-485d-ae55-b3588392f1c8',
-    UNHEX("6D970874D0DB767A7058798973F22CF6589601EDAB57996312F2EF7B56E5584D"),
+    UNHEX("322F7DB21CBF1B6F634DC9AAA6A16CEB38FF220E2D9AE9986F45446F1CA936AB"),
     1791977343811,
     0
 );
