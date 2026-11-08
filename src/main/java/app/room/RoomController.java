@@ -107,6 +107,33 @@ public class RoomController {
                 .body(roomResult.response());
     }
 
+    @PatchMapping("/api/rooms/{roomId}/users/{userId}")
+    public ResponseEntity<?> updateMember(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                          @PathVariable(value = "roomId") int roomId,
+                                          @PathVariable(value = "userId") String newMemberId,
+                                          @Valid @RequestBody RoomMemberConfigRequest request
+    ) {
+        Result authResult = authService.authenticate(sessionToken);
+        if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
+            return ResponseEntity
+                    .status(authResult.httpCode())
+                    .body(authResult.response());
+        }
+        String userId = authResponse.userId();
+
+        Result userResult = userService.getUsernameById(newMemberId);
+        if (!(userResult.response() instanceof UsernameByIdResponse)) {
+            return ResponseEntity
+                    .status(userResult.httpCode())
+                    .body(userResult.response());
+        }
+
+        Result roomResult = roomService.updateMember(userId, roomId, newMemberId, request.permissions());
+        return ResponseEntity
+                .status(roomResult.httpCode())
+                .body(roomResult.response());
+    }
+
     @DeleteMapping("/api/rooms/{id}")
     public ResponseEntity<?> removeRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
                                         @PathVariable(value = "id", required = true) int roomId
