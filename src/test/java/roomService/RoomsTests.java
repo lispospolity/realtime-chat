@@ -96,6 +96,24 @@ public class RoomsTests {
     }
 
     @Test
+    void updateMember_success() throws SQLException {
+        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+
+        Result result = roomService.updateMember(testMemberAllPerms, testingRoom, testMemberNoPerms, Permissions.READ_MESSAGES);
+
+        Assertions.assertEquals(Permissions.READ_MESSAGES, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+    }
+
+    @Test
+    void updateMember_notEnoughPerms() throws SQLException {
+        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+
+        Result result = roomService.updateMember(testMemberNoPerms, testingRoom, testMemberNoPerms, Permissions.READ_MESSAGES);
+
+        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+    }
+
+    @Test
     void getRoomMembers_owner() {
         Result result = roomService.getRoomMembers(testOwner, testingRoom);
 

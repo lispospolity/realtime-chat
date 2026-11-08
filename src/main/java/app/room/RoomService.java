@@ -107,6 +107,47 @@ public class RoomService {
         return new Result(201, response);
     }
 
+    public Result updateMember(@NotNull String userId, int roomId, @NotNull String existingMemberId, int newPermissions) {
+        try {
+            if (!roomRepo.roomExists(roomId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result(404, response);
+            }
+
+            Permissions requesterPerms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
+            if (!requesterPerms.allow(Permissions.CHANGE_PERMISSIONS)) {
+                var response = new ErrorResponse(
+                        false,
+                        "You do not have the required permissions to change permissions.");
+                return new Result(403, response);
+            }
+
+            if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This member is not in the room.");
+                return new Result(404, response);
+            }
+
+            Permissions newPerms = new Permissions(newPermissions);
+            newPerms.crunchTo(requesterPerms);
+
+            roomMemberRepo.changePerms(roomId, existingMemberId, requesterPerms.intValue());
+        } catch (IllegalArgumentException ex) {
+            var response = new ErrorResponse(
+                    false,
+                    "Permissions out of bounds.");
+            return new Result(400, response);
+        } catch (SQLException ex) { return serverError(500, ex); }
+
+        var response = new GenericResponse(
+                true,
+                "Successfully modified user permissions.");
+        return new Result(200, response);
+    }
+
     public Result getRoomMembers(@NotNull String userId, int roomId) {
         try {
             if (!roomRepo.roomExists(roomId)) {
