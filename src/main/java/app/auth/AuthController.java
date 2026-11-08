@@ -1,6 +1,6 @@
 package app.auth;
 
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.auth.dto.request.LoginRequest;
 import app.auth.dto.request.RegisterRequest;
 

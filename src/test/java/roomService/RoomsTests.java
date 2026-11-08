@@ -1,6 +1,6 @@
 package roomService;
 
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.config.AppConfig;
 import app.config.Env;
 import app.database.DataSourceFactory;
@@ -46,8 +46,8 @@ public class RoomsTests {
         roomService = new RoomService(roomRepo);
 
         testingRoom = roomRepo.create(testOwner, System.currentTimeMillis());
-
         roomRepo.addToRoom(testingRoom, testOwner, Permissions.getMaxPerms()); //roomService does that
+
         roomRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
         roomRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
     }

@@ -1,7 +1,7 @@
 package app.room;
 
 import app.auth.AuthService;
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.auth.dto.response.AuthenticationResponse;
 import app.user.UserService;
 import app.user.dto.UsernameByIdResponse;

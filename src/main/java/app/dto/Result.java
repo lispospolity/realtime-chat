@@ -1,4 +1,4 @@
-package app.auth.dto;
+package app.dto;
 
 import app.dto.response.Response;
 

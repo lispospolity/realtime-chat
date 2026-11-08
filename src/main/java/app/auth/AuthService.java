@@ -4,7 +4,7 @@ import app.auth.dto.response.AuthenticationResponse;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.config.AppConfig;
 import app.session.SessionRepository;
 import app.user.UserRepository;

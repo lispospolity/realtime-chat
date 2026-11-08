@@ -1,7 +1,7 @@
 package authService;
 
 import app.auth.AuthService;
-import app.auth.dto.Result;
+import app.dto.Result;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;

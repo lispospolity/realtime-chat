@@ -1,10 +1,9 @@
 package app.user;
 
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.dto.response.ErrorResponse;
 import app.logging.Debug;
 import app.user.dto.UsernameByIdResponse;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;

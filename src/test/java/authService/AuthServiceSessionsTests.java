@@ -4,7 +4,7 @@ import app.auth.*;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
-import app.auth.dto.Result;
+import app.dto.Result;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;

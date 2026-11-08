@@ -1,6 +1,6 @@
 package app.room;
 
-import app.auth.dto.Result;
+import app.dto.Result;
 import app.room.dto.RoomMembersResponse;
 import app.room.dto.UserPermsResponse;
 import app.dto.response.ErrorResponse;
