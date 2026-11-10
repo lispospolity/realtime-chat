@@ -63,28 +63,14 @@ public class RoomService {
      * newMemberId needs to be additionally authenticated before reaching this point
      */
     public Result addToRoom(@NotNull String userId, int roomId, @NotNull String newMemberId, int permissions) {
-        boolean isOwner = false;
+        Result permsResult = hasPermissions(userId, roomId, Permissions.ADD_USERS);
+        if (!(permsResult.response() instanceof
+                HasPermissionsResponse(boolean success, boolean isOwner, Permissions userPerms, String message)))
+            return permsResult;
+
         try {
-            String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId != null && ownerId.equals(userId)) isOwner = true;
-
-            if (!roomRepo.roomExists(roomId)) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist.");
-                return new Result(404, response);
-            }
-
-            Permissions perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
-            if (!perms.allow(Permissions.ADD_USERS) && !isOwner) {
-                var response = new ErrorResponse(
-                        false,
-                        "You do not have the required permissions to add users.");
-                return new Result(403, response);
-            }
-
             Permissions newMemberPermissions = new Permissions(permissions);
-            if (!isOwner) newMemberPermissions.crunchTo(perms);
+            if (!isOwner) newMemberPermissions.crunchTo(userPerms);
 
             if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
@@ -288,7 +274,7 @@ public class RoomService {
             if (!perms.allow(permissions) && !isOwner) {
                 var response = new ErrorResponse(
                         false,
-                        "You do not have the required permissions.");
+                        "You do not have the required permissions for this action.");
                 return new Result(403, response);
             }
 

@@ -64,7 +64,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
+        Assertions.assertEquals("You do not have the required permissions for this action.", response.error());
     }
 
     @Test
@@ -74,7 +74,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
+        Assertions.assertEquals("You do not have the required permissions for this action.", response.error());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You do not have the required permissions.", response.error());
+        Assertions.assertEquals("You do not have the required permissions for this action.", response.error());
     }
 
     @AfterEach
