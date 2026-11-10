@@ -10,6 +10,7 @@ import app.room.Permissions;
 import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
 import app.room.RoomService;
+import app.room.dto.response.HasPermissionsResponse;
 import app.room.dto.response.RoomMembersResponse;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
@@ -191,6 +192,38 @@ public class RoomsTests {
 
         Assertions.assertFalse(response.success());
         Assertions.assertEquals("You're not a member of this room.", response.error());
+    }
+
+    @Test
+    void hasPermissions_ownerNoPerms() {
+        Result result = roomService.hasPermissions(testOwnerNoPerms, testingRoom, Permissions.getMaxPerms());
+
+        HasPermissionsResponse response = Assertions.assertInstanceOf(HasPermissionsResponse.class, result.response());
+
+        Assertions.assertTrue(response.success());
+        Assertions.assertTrue(response.isOwner());
+        Assertions.assertEquals(0, response.userPerms().intValue());
+    }
+
+    @Test
+    void hasPermissions_memberAllPerms() {
+        Result result = roomService.hasPermissions(testMemberAllPerms, testingRoom, Permissions.getMaxPerms());
+
+        HasPermissionsResponse response = Assertions.assertInstanceOf(HasPermissionsResponse.class, result.response());
+
+        Assertions.assertTrue(response.success());
+        Assertions.assertFalse(response.isOwner());
+        Assertions.assertEquals(Permissions.getMaxPerms(), response.userPerms().intValue());
+    }
+
+    @Test
+    void hasPermissions_memberNoPerms() {
+        Result result = roomService.hasPermissions(testMemberNoPerms, testingRoom, Permissions.READ_MESSAGES);
+
+        ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
+
+        Assertions.assertFalse(response.success());
+        Assertions.assertEquals("You do not have the required permissions.", response.error());
     }
 
     @AfterEach

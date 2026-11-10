@@ -1,13 +1,10 @@
 package app.room;
 
 import app.dto.Result;
-import app.room.dto.response.RoomMembersResponse;
-import app.room.dto.response.UserPermsResponse;
+import app.room.dto.response.*;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
 import app.logging.Debug;
-import app.room.dto.response.CreateRoomResponse;
-import app.room.dto.response.UserRoomsResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
@@ -265,6 +262,42 @@ public class RoomService {
                     true,
                     rooms,
                     "");
+            return new Result(200, response);
+
+        } catch (SQLException ex) { return serverError(500, ex); }
+    }
+
+    /**
+     * Best use case is inputting only one permission, because it will be checking all of them.
+     */
+    public Result hasPermissions(@NotNull String userId, int roomId, int permissions) {
+        boolean isOwner = false;
+        Permissions perms;
+        try {
+            String ownerId = roomRepo.getOwner(roomId);
+            if (ownerId != null && ownerId.equals(userId)) isOwner = true;
+
+            if (!roomRepo.roomExists(roomId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result(404, response);
+            }
+
+            perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
+            if (!perms.allow(permissions) && !isOwner) {
+                var response = new ErrorResponse(
+                        false,
+                        "You do not have the required permissions.");
+                return new Result(403, response);
+            }
+
+            var response = new HasPermissionsResponse(
+                    true,
+                    isOwner,
+                    perms,
+                    ""
+            );
             return new Result(200, response);
 
         } catch (SQLException ex) { return serverError(500, ex); }
