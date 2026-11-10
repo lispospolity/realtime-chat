@@ -148,6 +148,40 @@ public class RoomService {
         return new Result(200, response);
     }
 
+    public Result removeMember(@NotNull String userId, int roomId, @NotNull String existingMemberId) {
+        try {
+            if (!roomRepo.roomExists(roomId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result(404, response);
+            }
+
+            Permissions requesterPerms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
+            if (!requesterPerms.allow(Permissions.REMOVE_USERS)) {
+                var response = new ErrorResponse(
+                        false,
+                        "You do not have the required permissions to change permissions.");
+                return new Result(403, response);
+            }
+
+            if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
+                var response = new ErrorResponse(
+                        false,
+                        "This member is not in the room.");
+                return new Result(404, response);
+            }
+
+            roomMemberRepo.removeFromRoom(roomId, existingMemberId);
+
+            var response = new GenericResponse(
+                    true,
+                    "Successfully removed the user from the room.");
+            return new Result(200, response);
+
+        } catch (SQLException | IllegalArgumentException ex) { return serverError(500, ex); }
+    }
+
     public Result getRoomMembers(@NotNull String userId, int roomId) {
         try {
             if (!roomRepo.roomExists(roomId)) {

@@ -114,6 +114,24 @@ public class RoomsTests {
     }
 
     @Test
+    void removeFromRoom_success() throws SQLException {
+        Assertions.assertTrue(roomMemberRepo.userInRoom(testingRoom, testMemberNoPerms));
+
+        Result result = roomService.removeMember(testMemberAllPerms, testingRoom, testMemberNoPerms);
+
+        Assertions.assertFalse(roomMemberRepo.userInRoom(testingRoom, testMemberNoPerms));
+    }
+
+    @Test
+    void removeFromRoom_userWithNoPerms() throws SQLException {
+        Assertions.assertTrue(roomMemberRepo.userInRoom(testingRoom, testMemberAllPerms));
+
+        Result result = roomService.removeMember(testMemberNoPerms, testingRoom, testMemberAllPerms);
+
+        Assertions.assertTrue(roomMemberRepo.userInRoom(testingRoom, testMemberAllPerms));
+    }
+
+    @Test
     void getRoomMembers_owner() {
         Result result = roomService.getRoomMembers(testOwner, testingRoom);
 
