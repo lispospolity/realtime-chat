@@ -5,6 +5,7 @@ import app.config.AppConfig;
 import app.config.Env;
 import app.database.DataSourceFactory;
 import app.dto.response.ErrorResponse;
+import app.dto.response.GenericResponse;
 import app.room.Permissions;
 import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
@@ -27,7 +28,7 @@ public class RoomsTests {
     private RoomMemberRepository roomMemberRepo;
     private RoomService roomService;
 
-    private final String testOwner = "12345678-1234-1234-1234-b3588392f1c8";
+    private final String testOwnerNoPerms = "12345678-1234-1234-1234-b3588392f1c8";
     private final String testMemberAllPerms = "87654321-1234-1234-1234-b3588392f1c8";
     private final String testMemberNoPerms = "87654321-4321-1234-1234-b3588392f1c8";
 
@@ -48,8 +49,8 @@ public class RoomsTests {
         roomMemberRepo = new RoomMemberRepository(dataSource);
         roomService = new RoomService(roomRepo, roomMemberRepo);
 
-        testingRoom = roomRepo.create(testOwner, System.currentTimeMillis());
-        roomMemberRepo.addToRoom(testingRoom, testOwner, Permissions.getMaxPerms()); //roomService does that
+        testingRoom = roomRepo.create(testOwnerNoPerms, System.currentTimeMillis());
+        roomMemberRepo.addToRoom(testingRoom, testOwnerNoPerms, 0);
 
         roomMemberRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
         roomMemberRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
@@ -73,6 +74,15 @@ public class RoomsTests {
 
         Assertions.assertFalse(response.success());
         Assertions.assertEquals("You do not have the required permissions to add users.", response.error());
+    }
+
+    @Test
+    void addToRoom_ownerNoPerms() throws SQLException {
+        Result result = roomService.addToRoom(testOwnerNoPerms, testingRoom, userNotInRoom, Permissions.READ_MESSAGES);
+
+        GenericResponse response = Assertions.assertInstanceOf(GenericResponse.class, result.response());
+
+        Assertions.assertTrue(roomMemberRepo.userInRoom(testingRoom, userNotInRoom));
     }
 
     @Test
@@ -133,14 +143,14 @@ public class RoomsTests {
 
     @Test
     void getRoomMembers_owner() {
-        Result result = roomService.getRoomMembers(testOwner, testingRoom);
+        Result result = roomService.getRoomMembers(testOwnerNoPerms, testingRoom);
 
         RoomMembersResponse response = Assertions.assertInstanceOf(RoomMembersResponse.class, result.response());
 
         Assertions.assertTrue(response.success());
 
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
         Assertions.assertTrue(response.members().contains(testMemberAllPerms));
         Assertions.assertTrue(response.members().contains(testMemberNoPerms));
     }
@@ -154,7 +164,7 @@ public class RoomsTests {
         Assertions.assertTrue(response.success());
 
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
         Assertions.assertTrue(response.members().contains(testMemberAllPerms));
         Assertions.assertTrue(response.members().contains(testMemberNoPerms));
     }
@@ -168,7 +178,7 @@ public class RoomsTests {
         Assertions.assertTrue(response.success());
 
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwner));
+        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
         Assertions.assertTrue(response.members().contains(testMemberAllPerms));
         Assertions.assertTrue(response.members().contains(testMemberNoPerms));
     }

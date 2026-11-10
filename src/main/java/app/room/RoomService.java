@@ -66,7 +66,11 @@ public class RoomService {
      * newMemberId needs to be additionally authenticated before reaching this point
      */
     public Result addToRoom(@NotNull String userId, int roomId, @NotNull String newMemberId, int permissions) {
+        boolean isOwner = false;
         try {
+            String ownerId = roomRepo.getOwner(roomId);
+            if (ownerId != null && ownerId.equals(userId)) isOwner = true;
+
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
                         false,
@@ -75,7 +79,7 @@ public class RoomService {
             }
 
             Permissions perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
-            if (!perms.allow(Permissions.ADD_USERS)) {
+            if (!perms.allow(Permissions.ADD_USERS) && !isOwner) {
                 var response = new ErrorResponse(
                         false,
                         "You do not have the required permissions to add users.");
@@ -83,7 +87,7 @@ public class RoomService {
             }
 
             Permissions newMemberPermissions = new Permissions(permissions);
-            newMemberPermissions.crunchTo(perms);
+            if (!isOwner) newMemberPermissions.crunchTo(perms);
 
             if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
