@@ -2,10 +2,11 @@ package app.room.dto.response;
 
 import app.dto.response.Response;
 import app.room.Permissions;
+import jakarta.validation.constraints.NotNull;
 
 public record HasPermissionsResponse(
         boolean success,
-        boolean isOwner,
+        @NotNull String roomOwner,
         Permissions userPerms,
         String message
 ) implements Response {}

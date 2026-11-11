@@ -201,8 +201,8 @@ public class RoomsTests {
         HasPermissionsResponse response = Assertions.assertInstanceOf(HasPermissionsResponse.class, result.response());
 
         Assertions.assertTrue(response.success());
-        Assertions.assertTrue(response.isOwner());
-        Assertions.assertEquals(0, response.userPerms().intValue());
+        Assertions.assertEquals(testOwnerNoPerms, response.roomOwner());
+        Assertions.assertEquals(Permissions.getMaxPerms(), response.userPerms().intValue());
     }
 
     @Test
@@ -212,7 +212,7 @@ public class RoomsTests {
         HasPermissionsResponse response = Assertions.assertInstanceOf(HasPermissionsResponse.class, result.response());
 
         Assertions.assertTrue(response.success());
-        Assertions.assertFalse(response.isOwner());
+        Assertions.assertNotEquals(testMemberAllPerms, response.roomOwner());
         Assertions.assertEquals(Permissions.getMaxPerms(), response.userPerms().intValue());
     }
 
