@@ -80,6 +80,24 @@ public class RoomController {
                 .body(roomResult.response());
     }
 
+    @DeleteMapping("/api/rooms/{id}")
+    public ResponseEntity<?> removeRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                        @PathVariable(value = "id") int roomId
+    ) {
+        Result authResult = authService.authenticate(sessionToken);
+        if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
+            return ResponseEntity
+                    .status(authResult.httpCode())
+                    .body(authResult.response());
+        }
+        String userId = authResponse.userId();
+
+        Result roomResult = roomService.deleteRoom(userId, roomId);
+        return ResponseEntity
+                .status(roomResult.httpCode())
+                .body(roomResult.response());
+    }
+
     @PostMapping("/api/rooms/{roomId}/users/{userId}")
     public ResponseEntity<?> addToRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
                                        @PathVariable(value = "roomId") int roomId,
@@ -134,9 +152,10 @@ public class RoomController {
                 .body(roomResult.response());
     }
 
-    @DeleteMapping("/api/rooms/{id}")
-    public ResponseEntity<?> removeRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
-                                        @PathVariable(value = "id") int roomId
+    @DeleteMapping("/api/rooms/{roomId}/users/{userId}")
+    public ResponseEntity<?> removeMember(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                          @PathVariable(value = "roomId") int roomId,
+                                          @PathVariable(value = "userId") String existingMemberId
     ) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
@@ -146,9 +165,17 @@ public class RoomController {
         }
         String userId = authResponse.userId();
 
-        Result roomResult = roomService.deleteRoom(userId, roomId);
+        Result userResult = userService.getUsernameById(existingMemberId);
+        if (!(userResult.response() instanceof UsernameByIdResponse)) {
+            return ResponseEntity
+                    .status(userResult.httpCode())
+                    .body(userResult.response());
+        }
+
+        Result roomResult = roomService.removeMember(userId, roomId, existingMemberId);
         return ResponseEntity
                 .status(roomResult.httpCode())
                 .body(roomResult.response());
     }
+
 }
