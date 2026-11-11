@@ -67,6 +67,7 @@ public class RoomService {
         if (!(permsResult.response() instanceof
                 HasPermissionsResponse(boolean success, boolean isOwner, Permissions userPerms, String message)))
             return permsResult;
+        if (!success) return permsResult;
 
         try {
             Permissions newMemberPermissions = new Permissions(permissions);
@@ -95,22 +96,13 @@ public class RoomService {
     }
 
     public Result updateMember(@NotNull String userId, int roomId, @NotNull String existingMemberId, int newPermissions) {
+        Result permsResult = hasPermissions(userId, roomId, Permissions.CHANGE_PERMISSIONS);
+        if (!(permsResult.response() instanceof
+                HasPermissionsResponse(boolean success, boolean isOwner, Permissions requesterPerms, String message)))
+            return permsResult;
+        if (!success) return permsResult;
+
         try {
-            if (!roomRepo.roomExists(roomId)) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist.");
-                return new Result(404, response);
-            }
-
-            Permissions requesterPerms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
-            if (!requesterPerms.allow(Permissions.CHANGE_PERMISSIONS)) {
-                var response = new ErrorResponse(
-                        false,
-                        "You do not have the required permissions to change permissions.");
-                return new Result(403, response);
-            }
-
             if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
                 var response = new ErrorResponse(
                         false,
