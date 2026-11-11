@@ -128,7 +128,7 @@ public class RoomController {
     @PatchMapping("/api/rooms/{roomId}/users/{userId}")
     public ResponseEntity<?> updateMember(@CookieValue(name = "session_token", required = false) String sessionToken,
                                           @PathVariable(value = "roomId") int roomId,
-                                          @PathVariable(value = "userId") String newMemberId,
+                                          @PathVariable(value = "userId") String existingMemberId,
                                           @Valid @RequestBody RoomMemberConfigRequest request
     ) {
         Result authResult = authService.authenticate(sessionToken);
@@ -139,14 +139,14 @@ public class RoomController {
         }
         String userId = authResponse.userId();
 
-        Result userResult = userService.getUsernameById(newMemberId);
+        Result userResult = userService.getUsernameById(existingMemberId);
         if (!(userResult.response() instanceof UsernameByIdResponse)) {
             return ResponseEntity
                     .status(userResult.httpCode())
                     .body(userResult.response());
         }
 
-        Result roomResult = roomService.updateMember(userId, roomId, newMemberId, request.permissions());
+        Result roomResult = roomService.updateMember(userId, roomId, existingMemberId, request.permissions());
         return ResponseEntity
                 .status(roomResult.httpCode())
                 .body(roomResult.response());
