@@ -99,7 +99,7 @@ public class RoomController {
     }
 
     @PostMapping("/api/rooms/{roomId}/users/{userId}")
-    public ResponseEntity<?> addToRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
+    public ResponseEntity<?> addMember(@CookieValue(name = "session_token", required = false) String sessionToken,
                                        @PathVariable(value = "roomId") int roomId,
                                        @PathVariable(value = "userId") String newMemberId,
                                        @Valid @RequestBody RoomMemberConfigRequest request
