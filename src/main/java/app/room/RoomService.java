@@ -25,11 +25,11 @@ public class RoomService {
      * 1. rooms (obviously),
      * 2. room_members as a member with all privileges
      */
-    public Result createRoom(@NotNull String userId) {
+    public Result createRoom(@NotNull String requesterId) {
         int roomId;
         try {
-            roomId = roomRepo.create(userId, System.currentTimeMillis());
-            roomMemberRepo.addToRoom(roomId, userId, Permissions.getMaxPerms());
+            roomId = roomRepo.create(requesterId, System.currentTimeMillis());
+            roomMemberRepo.addToRoom(roomId, requesterId, Permissions.getMaxPerms());
         } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new CreateRoomResponse(
@@ -39,10 +39,10 @@ public class RoomService {
         return new Result(201, response);
     }
 
-    public Result deleteRoom(@NotNull String userId, int roomId) {
+    public Result deleteRoom(@NotNull String requesterId, int roomId) {
         try {
             String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId == null || !ownerId.equals(userId)) {
+            if (ownerId == null || !ownerId.equals(requesterId)) {
                 var response = new ErrorResponse(
                         false,
                         "This room either does not exist, or you are not the owner.");
@@ -62,16 +62,16 @@ public class RoomService {
     /**
      * newMemberId needs to be additionally authenticated before reaching this point
      */
-    public Result addToRoom(@NotNull String userId, int roomId, @NotNull String newMemberId, int permissions) {
-        Result permsResult = hasPermissions(userId, roomId, Permissions.ADD_USERS);
+    public Result addToRoom(@NotNull String requesterId, int roomId, @NotNull String newMemberId, int inputPermissions) {
+        Result permsResult = hasPermissions(requesterId, roomId, Permissions.ADD_USERS);
         if (!(permsResult.response() instanceof
                 HasPermissionsResponse(boolean success, boolean isOwner, Permissions userPerms, String message)))
             return permsResult;
         if (!success) return permsResult;
 
         try {
-            Permissions newMemberPermissions = new Permissions(permissions);
-            if (!isOwner) newMemberPermissions.crunchTo(userPerms);
+            Permissions permissions = new Permissions(inputPermissions);
+            if (!isOwner) permissions.crunchTo(userPerms);
 
             if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
@@ -80,7 +80,7 @@ public class RoomService {
                 return new Result(409, response);
             }
 
-            roomMemberRepo.addToRoom(roomId, newMemberId, permissions);
+            roomMemberRepo.addToRoom(roomId, newMemberId, permissions.intValue());
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
@@ -95,8 +95,8 @@ public class RoomService {
         return new Result(201, response);
     }
 
-    public Result updateMember(@NotNull String userId, int roomId, @NotNull String existingMemberId, int newPermissions) {
-        Result permsResult = hasPermissions(userId, roomId, Permissions.CHANGE_PERMISSIONS);
+    public Result updateMember(@NotNull String requesterId, int roomId, @NotNull String existingMemberId, int inputPermissions) {
+        Result permsResult = hasPermissions(requesterId, roomId, Permissions.CHANGE_PERMISSIONS);
         if (!(permsResult.response() instanceof
                 HasPermissionsResponse(boolean success, boolean isOwner, Permissions requesterPerms, String message)))
             return permsResult;
@@ -110,10 +110,10 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            Permissions newPerms = new Permissions(newPermissions);
-            newPerms.crunchTo(requesterPerms);
+            Permissions permissions = new Permissions(inputPermissions);
+            permissions.crunchTo(requesterPerms);
 
-            roomMemberRepo.changePerms(roomId, existingMemberId, newPerms.intValue());
+            roomMemberRepo.changePerms(roomId, existingMemberId, permissions.intValue());
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
@@ -127,8 +127,8 @@ public class RoomService {
         return new Result(200, response);
     }
 
-    public Result removeMember(@NotNull String userId, int roomId, @NotNull String existingMemberId) {
-        Result permsResult = hasPermissions(userId, roomId, Permissions.REMOVE_USERS);
+    public Result removeMember(@NotNull String requesterId, int roomId, @NotNull String existingMemberId) {
+        Result permsResult = hasPermissions(requesterId, roomId, Permissions.REMOVE_USERS);
         if (!(permsResult.response() instanceof
                 HasPermissionsResponse(boolean success, boolean isOwner, Permissions requesterPerms, String message)))
             return permsResult;
@@ -152,7 +152,7 @@ public class RoomService {
         } catch (SQLException | IllegalArgumentException ex) { return serverError(500, ex); }
     }
 
-    public Result getRoomMembers(@NotNull String userId, int roomId) {
+    public Result getRoomMembers(@NotNull String requesterId, int roomId) {
         try {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
@@ -161,7 +161,7 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            if (!roomMemberRepo.userInRoom(roomId, userId)) {
+            if (!roomMemberRepo.userInRoom(roomId, requesterId)) {
                 var response = new ErrorResponse(
                         false,
                         "You're not a member of this room.");
@@ -179,7 +179,7 @@ public class RoomService {
         } catch (SQLException ex) { return serverError(500, ex); }
     }
 
-    public Result getUserPerms(@NotNull String userId, int roomId) {
+    public Result getUserPerms(@NotNull String requesterId, int roomId) {
         Permissions perms;
         try {
             if (!roomRepo.roomExists(roomId)) {
@@ -189,17 +189,17 @@ public class RoomService {
                 return new Result(404, response);
             }
 
-            if (!roomMemberRepo.userInRoom(roomId, userId)) {
+            if (!roomMemberRepo.userInRoom(roomId, requesterId)) {
                 var response = new ErrorResponse(
                         false,
                         "You're not a member of this room.");
                 return new Result(403, response);
             }
 
-            if (userId.equals(roomRepo.getOwner(roomId)))
+            if (requesterId.equals(roomRepo.getOwner(roomId)))
                 perms = new Permissions(Permissions.getMaxPerms());
             else
-                perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
+                perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, requesterId));
 
         } catch (SQLException ex) { return serverError(500, ex); }
 
