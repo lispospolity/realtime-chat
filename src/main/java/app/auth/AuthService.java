@@ -115,7 +115,7 @@ public class AuthService {
                 "Failed to generate unique session identifiers after 3 attempts. "
                 + "At this point, the universe is probably messing with us."));
 
-        Session session = new Session(userId, sessionId, timeNow + tokenExpiryInMillis);
+        Session session = new Session(token, userId, sessionId, timeNow + tokenExpiryInMillis);
         sessions.put(token, session);
 
         var response = new LoginResponse(
@@ -300,7 +300,7 @@ public class AuthService {
             String sessionId = sessionRepo.getSessionIdBySessionKey(tokenHash);
             Long expiresAt = sessionRepo.getTokenExpiry(tokenHash);
 
-            Session session = new Session(userId, sessionId, expiresAt);
+            Session session = new Session(sessionKey, userId, sessionId, expiresAt);
             sessions.put(sessionKey, session);
 
             var response = new AuthenticationResponse(
