@@ -125,8 +125,10 @@ public class SessionRepository {
             statement.setBytes(1, sessionKey);
 
             ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getLong(1);
-            return 0L;
+            if (!resultSet.next()) return 0L;
+
+            long expiresAt = resultSet.getLong(1);
+            return resultSet.wasNull() ? null : expiresAt;
         }
     }
 
