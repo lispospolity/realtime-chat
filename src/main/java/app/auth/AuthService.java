@@ -256,9 +256,9 @@ public class AuthService {
         if (!sessions.containsKey(sessionKey)) return dbAuthenticate(sessionKey);
 
         Session session = sessions.get(sessionKey);
-        if (session == null || session.userId() == null) return dbAuthenticate(sessionKey);
+        if (session == null || session.getUserId() == null) return dbAuthenticate(sessionKey);
 
-        if (session.expiresAtMillis() != null && session.expiresAtMillis() <= System.currentTimeMillis()) {
+        if (session.getExpiresAtMillis() != null && session.getExpiresAtMillis() <= System.currentTimeMillis()) {
             var response = new ErrorResponse(
                     false,
                     "Incorrect, or expired session key."
@@ -268,7 +268,7 @@ public class AuthService {
 
         var response = new AuthenticationResponse(
                 true,
-                session.userId(),
+                session.getUserId(),
                 "Successful authentication."
         );
         return new Result(200, response);
@@ -305,7 +305,7 @@ public class AuthService {
 
             var response = new AuthenticationResponse(
                     true,
-                    session.userId(),
+                    session.getUserId(),
                     "Successful authentication."
             );
             return new Result(200, response);
@@ -314,7 +314,7 @@ public class AuthService {
 
     private void deleteUserSessions(String userId) {
         for (String seshKey : sessions.keySet()) {
-            if (sessions.get(seshKey).userId().equals(userId))
+            if (sessions.get(seshKey).getUserId().equals(userId))
                 sessions.remove(seshKey);
         }
     }
