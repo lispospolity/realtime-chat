@@ -40,6 +40,9 @@ public class AuthService {
     private final UserRepository userRepo;
     private final SessionRepository sessionRepo;
 
+    /**
+     * Look up session object by SessionKey (also known as token)
+     */
     private final ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
 
     public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository) {
