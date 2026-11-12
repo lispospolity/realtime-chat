@@ -28,4 +28,8 @@ public class Session {
         this.sessionId = sessionId;
         this.expiresAtMillis = expiresAtMillis;
     }
+
+    public boolean expired() {
+        return this.expiresAtMillis != null && expiresAtMillis <= System.currentTimeMillis();
+    }
 }

@@ -258,7 +258,7 @@ public class AuthService {
         Session session = sessions.get(sessionKey);
         if (session == null || session.getUserId() == null) return dbAuthenticate(sessionKey);
 
-        if (session.getExpiresAtMillis() != null && session.getExpiresAtMillis() <= System.currentTimeMillis()) {
+        if (session.expired()) {
             var response = new ErrorResponse(
                     false,
                     "Incorrect, or expired session key."
