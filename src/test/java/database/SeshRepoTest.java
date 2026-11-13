@@ -1,6 +1,7 @@
 package database;
 
 import app.database.DataSourceFactory;
+import app.session.Session;
 import app.session.SessionRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
@@ -67,13 +68,6 @@ public class SeshRepoTest {
     }
 
     @Test
-    void getSessionIdBySessionKey() throws SQLException {
-        String sessionId = testRepo.getSessionIdBySessionKey(existingTokenHash);
-
-        Assertions.assertEquals("repo_existingSessionId", sessionId);
-    }
-
-    @Test
     void newSession() throws SQLException {
         testRepo.newSession(
                 "repo_newSessionId",
@@ -82,9 +76,10 @@ public class SeshRepoTest {
                 System.currentTimeMillis(),
                 System.currentTimeMillis()+50000
         );
-        String resultId = testRepo.getSessionIdBySessionKey(newTokenHash);
+        SessionRecord session = testRepo.getSessionBySessionKey(newTokenHash);
 
-        Assertions.assertEquals("repo_newSessionId", resultId);
+        Assertions.assertNotNull(session);
+        Assertions.assertEquals("repo_newSessionId", session.sessionId());
 
         cleanupNeeded = true;
     }
@@ -129,8 +124,8 @@ public class SeshRepoTest {
     void deleteSessionBySessionKey() throws SQLException {
         testRepo.deleteSessionByToken(existingTokenHash);
 
-        String userId = testRepo.getUserIdBySessionKey(existingTokenHash);
-        Assertions.assertNull(userId);
+        SessionRecord session = testRepo.getSessionBySessionKey(existingTokenHash);
+        Assertions.assertNull(session);
 
         cleanupNeeded = true;
     }
@@ -139,8 +134,8 @@ public class SeshRepoTest {
     void deleteSessionsByUserId() throws SQLException {
         testRepo.deleteSessionsByUserId("repo_testId");
 
-        String sessionId = testRepo.getSessionIdBySessionKey(existingTokenHash);
-        Assertions.assertNull(sessionId);
+        SessionRecord session = testRepo.getSessionBySessionKey(existingTokenHash);
+        Assertions.assertNull(session);
 
         cleanupNeeded = true;
     }

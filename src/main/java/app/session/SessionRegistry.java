@@ -57,6 +57,13 @@ public class SessionRegistry {
         sessionsByUserId.remove(session.getUserId(), userSessions);
     }
 
+    public boolean sessionOwnerCheck(String sessionId, String userId) throws SQLException {
+        Session session = sessionsById.get(sessionId);
+        if (session != null) return userId.equals(session.getUserId());
+
+        return sessionRepo.sessionOwnerCheck(sessionId, userId);
+    }
+
     public @Nullable Session getSessionByKey(@NotNull String sessionKey) throws SQLException, NoSuchAlgorithmException {
         Token token = new Token(sessionKey);
 

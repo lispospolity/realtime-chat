@@ -5,7 +5,6 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
-import java.util.Arrays;
 
 @Repository
 public class SessionRepository {
@@ -91,34 +90,6 @@ public class SessionRepository {
         }
     }
 
-    public @Nullable String getUserIdBySessionKey(byte[] sessionKey) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-            PreparedStatement statement = connection.prepareStatement("""
-                    SELECT user_id FROM user_sessions WHERE sesh_key = ?;
-                    """)
-        ) {
-            statement.setBytes(1, sessionKey);
-
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getString("user_id");
-            return null;
-        }
-    }
-
-    public @Nullable String getSessionIdBySessionKey(byte[] sessionKey) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                    SELECT session_id FROM user_sessions WHERE sesh_key = ?;
-                    """)
-        ) {
-            statement.setBytes(1, sessionKey);
-
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getString("session_id");
-            return null;
-        }
-    }
-
     public boolean tokenExpired(byte[] sessionKey, Long timeNow) throws SQLException {
         try (Connection connection = dataSource.getConnection();
             PreparedStatement statement = connection.prepareStatement("""
@@ -135,23 +106,6 @@ public class SessionRepository {
 
             ResultSet resultSet = statement.executeQuery();
             return !resultSet.next();
-        }
-    }
-
-    public @Nullable Long getTokenExpiry(byte[] sessionKey) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                     SELECT expires_at FROM user_sessions
-                     WHERE sesh_key = ?;
-                     """)
-        ) {
-            statement.setBytes(1, sessionKey);
-
-            ResultSet resultSet = statement.executeQuery();
-            if (!resultSet.next()) return 0L;
-
-            long expiresAt = resultSet.getLong(1);
-            return resultSet.wasNull() ? null : expiresAt;
         }
     }
 
