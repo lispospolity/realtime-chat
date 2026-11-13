@@ -12,7 +12,7 @@ import java.sql.SQLTransientConnectionException;
 
 @Service
 public class UserService {
-    private UserRepository userRepo;
+    private final UserRepository userRepo;
 
     public UserService(UserRepository userRepo) { this.userRepo = userRepo; }
 
