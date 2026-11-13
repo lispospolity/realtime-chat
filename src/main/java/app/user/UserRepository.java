@@ -18,27 +18,31 @@ public class UserRepository {
     }
 
     public void create(String id, String name, String hash, Long createdAt) throws SQLException {
-        Connection connection = dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
                  INSERT INTO users(id, username, password, created_at)
                  VALUES(?, ?, ?, ?);
                  """);
-        statement.setString(1, id);
-        statement.setString(2, name);
-        statement.setString(3, hash);
-        statement.setLong(4, createdAt);
+        ) {
+            statement.setString(1, id);
+            statement.setString(2, name);
+            statement.setString(3, hash);
+            statement.setLong(4, createdAt);
 
-        statement.executeUpdate();
+            statement.executeUpdate();
+        }
     }
 
     public void delete(String id) throws SQLException {
-        Connection connection = dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection();
         PreparedStatement statement = connection.prepareStatement("""
                 DELETE FROM users WHERE id = ?;
                 """);
-        statement.setString(1, id);
+        ) {
+            statement.setString(1, id);
 
-        statement.executeUpdate();
+            statement.executeUpdate();
+        }
     }
 
     public @Nullable String getId(String name) throws SQLException {
