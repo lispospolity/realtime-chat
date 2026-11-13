@@ -42,10 +42,6 @@ public class AuthService {
     private final SessionRepository sessionRepo;
 
     private final SessionRegistry sessionRegistry;
-    /**
-     * Look up session object by SessionKey (also known as token)
-     */
-    private final ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
 
     public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository, SessionRegistry sessionRegistry) {
         minNameLength = appConfig.minNameLength;
@@ -119,7 +115,6 @@ public class AuthService {
                 + "At this point, the universe is probably messing with us."));
 
         Session session = new Session(token, userId, sessionId, timeNow + tokenExpiryInMillis);
-        sessions.put(token, session);
 
         var response = new LoginResponse(
                 true,
@@ -154,8 +149,6 @@ public class AuthService {
 
         } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
 
-        sessions.remove(sessionKey);
-
         var response = new GenericResponse(
                 true,
                 "Logout successful."
@@ -171,8 +164,6 @@ public class AuthService {
         try {
             sessionRegistry.removeAllUserSessions(session);
         } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
-
-        deleteUserSessions(session.getUserId());
 
         var response = new GenericResponse(
                 true,
@@ -275,13 +266,6 @@ public class AuthService {
                 "Successful authentication."
         );
         return new Result(200, response);
-    }
-
-    private void deleteUserSessions(String userId) {
-        for (String seshKey : sessions.keySet()) {
-            if (sessions.get(seshKey).getUserId().equals(userId))
-                sessions.remove(seshKey);
-        }
     }
 
     private Result serverError(int httpCode, Exception ex) {
