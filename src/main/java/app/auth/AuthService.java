@@ -226,7 +226,7 @@ public class AuthService {
     }
 
     public Result authenticate(@Nullable String sessionKey) {
-        if (sessionKey == null) {
+        if (sessionKey == null || sessionKey.isBlank()) {
             var response = new ErrorResponse(
                     false,
                     "Session token cannot be null."
