@@ -70,12 +70,10 @@ public class SessionRegistry {
 
         if (sessionRepo.tokenExpired(token.getHashedValue(), System.currentTimeMillis())) return null;
 
-        String userId = sessionRepo.getUserIdBySessionKey(token.getHashedValue());
-        String sessionId = sessionRepo.getSessionIdBySessionKey(token.getHashedValue());
-        Long expiresAt = sessionRepo.getTokenExpiry(token.getHashedValue());
+        SessionRecord record = sessionRepo.getSessionBySessionKey(token.getHashedValue());
 
-        if (userId == null || sessionId == null) return null;
-        session = new Session(token, userId, sessionId, expiresAt);
+        if (record == null) return null;
+        session = new Session(token, record.userId(), record.sessionId(), record.expiresAt());
 
         addSessionToCache(session);
 
