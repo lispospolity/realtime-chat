@@ -32,11 +32,14 @@ public class SessionRegistryTests {
     private SessionRegistry sessionRegistry;
 
     private String testUserId;
-    private Token neverExpiringToken;
 
+    private Token neverExpiringToken;
+    private Token expiredToken;
+
+    private Session expiredSession;
 
     @BeforeAll
-    static void setupCache() throws IOException {
+    static void setupDatabase() throws IOException {
         Env env = new Env(testEnvDir, null);
         testConfig = new AppConfig(env);
         ds = DataSourceFactory.create(testConfig);
@@ -45,14 +48,13 @@ public class SessionRegistryTests {
     }
 
     @BeforeEach
-    void setupRegistry() {
-        sessionRegistry = new SessionRegistry(testConfig, sessionRepo);
-    }
-
-    @BeforeEach
     void setupSessions() throws NoSuchAlgorithmException, SQLException {
+        setupRegistry();
         createUsers();
         createSessions();
+    }
+    void setupRegistry() {
+        sessionRegistry = new SessionRegistry(testConfig, sessionRepo);
     }
     void createUsers() throws SQLException {
         testUserId = UUID.randomUUID().toString();
@@ -61,6 +63,9 @@ public class SessionRegistryTests {
     void createSessions() throws NoSuchAlgorithmException, SQLException {
         neverExpiringToken = new Token();
         sessionRepo.newSession("cache_test1", testUserId, neverExpiringToken.getHashedValue(), System.currentTimeMillis(), null);
+        expiredToken = new Token();
+        expiredSession = new Session(expiredToken, testUserId, "cache_testExpired", 0L);
+        sessionRepo.newSession("cache_testExpired", testUserId, expiredToken.getHashedValue(), System.currentTimeMillis(), 0L);
     }
 
     @Test
@@ -103,6 +108,27 @@ public class SessionRegistryTests {
         Assertions.assertDoesNotThrow(() -> sessionRegistry.removeSessionBySessionId(""));
 
         Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+    }
+
+    @Test
+    void removeAllUserSessions_success() throws NoSuchAlgorithmException, SQLException {
+        Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+        Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(expiredToken.getHashedValue()));
+
+        sessionRegistry.removeAllUserSessions(expiredSession);
+
+        Assertions.assertNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+        Assertions.assertNull(sessionRepo.getSessionBySessionKey(expiredToken.getHashedValue()));
+    }
+
+    @Test
+    void removeAllUserSessions_null() {
+        Assertions.assertThrows(NullPointerException.class, () -> sessionRegistry.removeAllUserSessions(null));
+    }
+
+    @Test
+    void sessionOwnerCheck_expiredSession() throws SQLException {
+        Assertions.assertTrue(sessionRegistry.sessionOwnerCheck(expiredSession.getSessionId(), expiredSession.getUserId()));
     }
 
     @AfterEach
