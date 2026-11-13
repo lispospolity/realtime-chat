@@ -6,6 +6,7 @@ import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
 import app.dto.Result;
 import app.session.SessionRegistry;
+import app.session.Token;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;
@@ -13,7 +14,6 @@ import app.database.DataSourceFactory;
 import app.session.SessionRepository;
 import app.user.UserRepository;
 import org.junit.jupiter.api.*;
-import app.utils.TokenUtils;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -155,14 +155,14 @@ public class AuthServiceSessionsTests {
         sessionRepo.newSession(
                 "auth_deleteMe",
                 "d11c5281-afe0-485d-ae55-b3588392f1c8",
-                TokenUtils.hashToken(deleteMeToken),
+                new Token(deleteMeToken).getHashedValue(),
                 System.currentTimeMillis(),
                 null
         );
         sessionRepo.newSession(
                 "auth_deleteAll",
                 "d11c5281-afe0-485d-ae55-b3588392f1c8",
-                TokenUtils.hashToken(expiredToken),
+                new Token(expiredToken).getHashedValue(),
                 System.currentTimeMillis(),
                 0L
         );

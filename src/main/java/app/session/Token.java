@@ -18,11 +18,17 @@ public final class Token {
 
     private final static SecureRandom secureRandom = new SecureRandom();
 
-    public Token(String token) throws NoSuchAlgorithmException {
+    public Token() throws NoSuchAlgorithmException {
+        this.value = generateToken();
+        this.hashedToken = hashToken(value);
+    }
+
+    public Token(@NotNull String token) throws NoSuchAlgorithmException {
         this.value = token;
         this.hashedToken = hashToken(token);
     }
 
+    @Deprecated
     public static Token createToken() throws NoSuchAlgorithmException {
         String token = generateToken();
         return new Token(token);
