@@ -7,6 +7,8 @@ import app.user.dto.UsernameByIdResponse;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 
 @Service
 public class UserService {
@@ -37,11 +39,18 @@ public class UserService {
                     username,
                     "Successfully fetched the username.");
             return new Result(200, response);
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
     }
 
-    private Result serverError(int httpCode, Exception ex) {
+    private Result serverError(Exception ex) {
         Debug.log("RoomService:generic serverError(): "+ex.toString());
+
+        int httpCode = switch (ex) {
+            case SQLTransientConnectionException e -> 503;
+            case SQLTimeoutException e -> 504;
+            case SQLException e -> 500;
+            default -> 500;
+        };
 
         var response = new ErrorResponse(
                 false,
