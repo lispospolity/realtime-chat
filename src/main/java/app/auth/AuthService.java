@@ -7,7 +7,6 @@ import app.auth.dto.response.LoginResponse;
 import app.dto.Result;
 import app.config.AppConfig;
 import app.session.SessionRegistry;
-import app.session.SessionRepository;
 import app.session.Token;
 import app.user.UserRepository;
 import app.logging.Debug;
@@ -15,6 +14,8 @@ import app.logging.Debug;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 import java.util.UUID;
 
 import app.session.Session;
@@ -63,9 +64,9 @@ public class AuthService {
                 return new Result(400, response);
             }
             hash = userRepo.getPassword(userId);
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
-        if (hash == null) return serverError(500, new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
+        if (hash == null) return serverError(new NullPointerException("For some reason hash is null - impossible? Yeah i thought so too."));
 
         if (!BCrypt.checkpw(password, hash)) {
             var response = new ErrorResponse(
@@ -93,17 +94,17 @@ public class AuthService {
                 );
                 return new Result(200, response);
             } catch (SQLIntegrityConstraintViolationException ex) {
-                if (ex.getErrorCode() != 1062) return serverError(500, ex);
+                if (ex.getErrorCode() != 1062) return serverError(ex);
 
                 Debug.log("Well that's unexpected: " + ex);
             } catch (NoSuchAlgorithmException | SQLException ex) {
-                return serverError(500, ex);
+                return serverError(ex);
             }
         }
 
         // If this gets through, go buy a lottery ticket. Actually, don't.
         // This is considerably less likely than you think.
-        return serverError(500, new SQLIntegrityConstraintViolationException(
+        return serverError(new SQLIntegrityConstraintViolationException(
                 "Failed to generate unique session identifiers after 3 attempts. "
                 + "At this point, the universe is probably messing with us."));
     }
@@ -126,7 +127,7 @@ public class AuthService {
 
             sessionRegistry.removeSessionBySessionId(sessionId);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new GenericResponse(
                 true,
@@ -142,7 +143,7 @@ public class AuthService {
 
         try {
             sessionRegistry.removeAllUserSessions(session);
-        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(ex); }
 
         var response = new GenericResponse(
                 true,
@@ -178,7 +179,7 @@ public class AuthService {
         boolean userExists;
         try {
             userExists = userRepo.getId(username) != null;
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         if (userExists) {
             var response = new ErrorResponse(
@@ -198,15 +199,15 @@ public class AuthService {
                 created = true;
                 break;
             } catch (SQLIntegrityConstraintViolationException ex) {
-                if (ex.getErrorCode() != 1062) return serverError(500, ex);
+                if (ex.getErrorCode() != 1062) return serverError(ex);
 
                 Debug.log("Well this has 1/2^122 chances of happening: " + ex);
                 continue;
             } catch (SQLException ex) {
-                return serverError(500, ex);
+                return serverError(ex);
             }
         }
-        if (!created) return serverError(500, new SQLIntegrityConstraintViolationException(
+        if (!created) return serverError(new SQLIntegrityConstraintViolationException(
                 "Similarly to session creation, this just doesn't happen, what did you do to piss off the man upstairs?"
         ));
 
@@ -229,7 +230,7 @@ public class AuthService {
         Session session;
         try {
             session = sessionRegistry.getSessionByKey(sessionKey);
-        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(ex); }
 
         if (session == null || session.expired()) {
             var response = new ErrorResponse(
@@ -247,8 +248,15 @@ public class AuthService {
         return new Result(200, response);
     }
 
-    private Result serverError(int httpCode, Exception ex) {
+    private Result serverError(Exception ex) {
         Debug.log("AuthService:generic serverError(): "+ex.toString());
+
+        int httpCode = switch (ex) {
+            case SQLTransientConnectionException e -> 503;
+            case SQLTimeoutException e -> 504;
+            case SQLException e -> 500;
+            default -> 500;
+        };
 
         var response = new ErrorResponse(
                 false,
