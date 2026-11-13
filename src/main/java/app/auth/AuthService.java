@@ -12,15 +12,12 @@ import app.user.UserRepository;
 import app.logging.Debug;
 
 import static app.utils.TokenUtils.generateToken;
-import static app.utils.TokenUtils.hashToken;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import app.utils.TokenUtils;
 import app.session.Session;
 import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Service;
@@ -83,19 +80,14 @@ public class AuthService {
         //Retry loop for the absolutely unlikely (1/2^122) 500 error, which probably will never happen, but I wanted to make a check for it :)
         String token = "";
         String sessionId = "";
-        long timeNow = 0;
         boolean created = false;
         for (int i = 0; i < 3; i++) {
             token = generateToken();
-            byte[] hashedToken;
-            try {
-                hashedToken = hashToken(token);
-            } catch (NoSuchAlgorithmException ex) { return serverError(500, ex); }
+
             sessionId = UUID.randomUUID().toString();
-            timeNow = System.currentTimeMillis();
 
             try {
-                sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
+                sessionRegistry.addSession(token, sessionId, userId);
                 created = true;
                 break;
             } catch (SQLIntegrityConstraintViolationException ex) {
@@ -103,7 +95,7 @@ public class AuthService {
 
                 Debug.log("Well that's unexpected: " + ex);
                 continue;
-            } catch (SQLException ex) {
+            } catch (NoSuchAlgorithmException | SQLException ex) {
                 return serverError(500, ex);
             }
         }
@@ -113,8 +105,6 @@ public class AuthService {
         if (!created) return serverError(500, new SQLIntegrityConstraintViolationException(
                 "Failed to generate unique session identifiers after 3 attempts. "
                 + "At this point, the universe is probably messing with us."));
-
-        Session session = new Session(token, userId, sessionId, timeNow + tokenExpiryInMillis);
 
         var response = new LoginResponse(
                 true,
@@ -129,15 +119,12 @@ public class AuthService {
     public Result logout(String sessionKey, @Nullable String sessionId) {
         Result result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
-        String owner = authResponse.session().getUserId();
+        Session session = authResponse.session();
 
-        byte[] sessionHash;
         try {
-            sessionHash = hashToken(sessionKey);
+            if (sessionId == null) sessionId = session.getSessionId();
 
-            if (sessionId == null) sessionId = sessionRepo.getSessionIdBySessionKey(sessionHash);
-
-            if (!sessionRepo.sessionOwnerCheck(sessionId, owner)) {
+            if (!sessionRepo.sessionOwnerCheck(sessionId, session.getUserId())) {
                 var response = new ErrorResponse(
                         false,
                         "Incorrect session id, or you're not the owner of this session."
@@ -145,9 +132,9 @@ public class AuthService {
                 return new Result(401, response);
             }
 
-            sessionRepo.deleteSessionBySessionId(sessionId);
+            sessionRegistry.removeSessionBySessionId(sessionId);
 
-        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(500, ex); }
 
         var response = new GenericResponse(
                 true,

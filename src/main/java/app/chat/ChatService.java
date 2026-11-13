@@ -15,6 +15,7 @@ import java.util.*;
 
 @Service
 public class ChatService {
+    //TODO move this map to roomRegistry
     private final HashMap<Integer, HashMap<String, Permissions>> rooms = new HashMap<>();
     private final RoomService roomService;
 
