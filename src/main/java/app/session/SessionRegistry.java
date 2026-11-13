@@ -1,7 +1,6 @@
 package app.session;
 
 import app.config.AppConfig;
-import app.utils.TokenUtils;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Component;
@@ -18,7 +17,7 @@ public class SessionRegistry {
     private final SessionRepository sessionRepo;
 
 
-    private final ConcurrentHashMap<String, Session> sessionsByKey = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Token, Session> sessionsByToken = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Session> sessionsById = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Set<Session>> sessionsByUserId = new ConcurrentHashMap<>();
 
@@ -27,14 +26,13 @@ public class SessionRegistry {
         this.sessionRepo = sessionRepo;
     }
 
-    public void addSession(String sessionKey, String sessionId, String userId) throws SQLException, NoSuchAlgorithmException {
-        if (sessionsByKey.containsKey(sessionKey) || sessionsById.containsKey(sessionId)) throw new SQLException("Unique sessionKey constraint broken.");
+    public void addSession(Token token, String sessionId, String userId) throws SQLException, NoSuchAlgorithmException {
+        if (sessionsByToken.containsKey(token) || sessionsById.containsKey(sessionId)) throw new SQLException("Unique sessionKey constraint broken.");
 
         long timeNow = System.currentTimeMillis();
-        byte[] hashedToken = TokenUtils.hashToken(sessionKey);
-        sessionRepo.newSession(sessionId, userId, hashedToken, timeNow, timeNow + tokenExpiryInMillis);
+        sessionRepo.newSession(sessionId, userId, token.getHashedValue(), timeNow, timeNow + tokenExpiryInMillis);
 
-        Session session = new Session(sessionKey, userId, sessionId, timeNow + tokenExpiryInMillis);
+        Session session = new Session(token, userId, sessionId, timeNow + tokenExpiryInMillis);
 
         addSessionToCache(session);
     }
@@ -60,7 +58,9 @@ public class SessionRegistry {
     }
 
     public @Nullable Session getSessionByKey(@NotNull String sessionKey) throws SQLException, NoSuchAlgorithmException {
-        Session session = sessionsByKey.get(sessionKey);
+        Token token = new Token(sessionKey);
+
+        Session session = sessionsByToken.get(token);
         if (session != null) {
             if (!session.expired()) return session;
 
@@ -68,15 +68,14 @@ public class SessionRegistry {
             return session;
         }
 
-        byte[] hash = TokenUtils.hashToken(sessionKey);
-        if (sessionRepo.tokenExpired(hash, System.currentTimeMillis())) return null;
+        if (sessionRepo.tokenExpired(token.getHashedValue(), System.currentTimeMillis())) return null;
 
-        String userId = sessionRepo.getUserIdBySessionKey(hash);
-        String sessionId = sessionRepo.getSessionIdBySessionKey(hash);
-        Long expiresAt = sessionRepo.getTokenExpiry(hash);
+        String userId = sessionRepo.getUserIdBySessionKey(token.getHashedValue());
+        String sessionId = sessionRepo.getSessionIdBySessionKey(token.getHashedValue());
+        Long expiresAt = sessionRepo.getTokenExpiry(token.getHashedValue());
 
         if (userId == null || sessionId == null) return null;
-        session = new Session(sessionKey, userId, sessionId, expiresAt);
+        session = new Session(token, userId, sessionId, expiresAt);
 
         addSessionToCache(session);
 
@@ -87,7 +86,7 @@ public class SessionRegistry {
     private void addSessionToCache(@Nullable Session session) {
         if (session == null) return;
 
-        sessionsByKey.put(session.getSessionKey(), session);
+        sessionsByToken.put(session.getSessionToken(), session);
         sessionsById.put(session.getSessionId(), session);
 
         sessionsByUserId
@@ -97,7 +96,7 @@ public class SessionRegistry {
 
     private void removeSessionFromCache(@Nullable Session session) {
         if (session == null) return;
-        sessionsByKey.remove(session.getSessionKey(), session);
+        sessionsByToken.remove(session.getSessionToken(), session);
         sessionsById.remove(session.getSessionId(), session);
 
         Set<Session> sessions = sessionsByUserId.get(session.getUserId());

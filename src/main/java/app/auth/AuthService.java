@@ -8,10 +8,9 @@ import app.dto.Result;
 import app.config.AppConfig;
 import app.session.SessionRegistry;
 import app.session.SessionRepository;
+import app.session.Token;
 import app.user.UserRepository;
 import app.logging.Debug;
-
-import static app.utils.TokenUtils.generateToken;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -78,42 +77,37 @@ public class AuthService {
         }
 
         //Retry loop for the absolutely unlikely (1/2^122) 500 error, which probably will never happen, but I wanted to make a check for it :)
-        String token = "";
-        String sessionId = "";
-        boolean created = false;
-        for (int i = 0; i < 3; i++) {
-            token = generateToken();
 
-            sessionId = UUID.randomUUID().toString();
+        for (int i = 0; i < 3; i++) {
+            String sessionId = UUID.randomUUID().toString();
 
             try {
+                Token token = Token.createToken();
+
                 sessionRegistry.addSession(token, sessionId, userId);
-                created = true;
-                break;
+
+                var response = new LoginResponse(
+                        true,
+                        token.getValue(),
+                        sessionId,
+                        tokenExpiryInMillis/1000,
+                        "Login successful."
+                );
+                return new Result(200, response);
             } catch (SQLIntegrityConstraintViolationException ex) {
                 if (ex.getErrorCode() != 1062) return serverError(500, ex);
 
                 Debug.log("Well that's unexpected: " + ex);
-                continue;
             } catch (NoSuchAlgorithmException | SQLException ex) {
                 return serverError(500, ex);
             }
         }
 
-        // If this happens, go buy a lottery ticket. Actually, don't.
+        // If this gets through, go buy a lottery ticket. Actually, don't.
         // This is considerably less likely than you think.
-        if (!created) return serverError(500, new SQLIntegrityConstraintViolationException(
+        return serverError(500, new SQLIntegrityConstraintViolationException(
                 "Failed to generate unique session identifiers after 3 attempts. "
                 + "At this point, the universe is probably messing with us."));
-
-        var response = new LoginResponse(
-                true,
-                token,
-                sessionId,
-                tokenExpiryInMillis/1000,
-                "Login successful."
-        );
-        return new Result(200, response);
     }
 
     public Result logout(String sessionKey, @Nullable String sessionId) {
