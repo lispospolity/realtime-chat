@@ -8,6 +8,8 @@ import app.logging.Debug;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Service;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
+import java.sql.SQLTransientConnectionException;
 import java.util.List;
 
 @Service
@@ -30,7 +32,7 @@ public class RoomService {
         try {
             roomId = roomRepo.create(requesterId, System.currentTimeMillis());
             roomMemberRepo.addToRoom(roomId, requesterId, Permissions.getMaxPerms());
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new CreateRoomResponse(
                 true,
@@ -51,7 +53,7 @@ public class RoomService {
 
             roomRepo.deleteRoom(roomId);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new ErrorResponse(
                 true,
@@ -87,7 +89,7 @@ public class RoomService {
                     false,
                     "Permissions out of bounds.");
             return new Result(400, response);
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
 
         var response = new GenericResponse(
@@ -121,7 +123,7 @@ public class RoomService {
                     false,
                     "Permissions out of bounds.");
             return new Result(400, response);
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new GenericResponse(
                 true,
@@ -151,7 +153,7 @@ public class RoomService {
                     "Successfully removed the user from the room.");
             return new Result(200, response);
 
-        } catch (SQLException | IllegalArgumentException ex) { return serverError(500, ex); }
+        } catch (SQLException | IllegalArgumentException ex) { return serverError(ex); }
     }
 
     public Result getRoomMembers(@NotNull String requesterId, int roomId) {
@@ -178,7 +180,7 @@ public class RoomService {
                     "Successfully fetched room members."
             );
             return new Result(200, response);
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
     }
 
     public Result getUserPerms(@NotNull String requesterId, int roomId) {
@@ -203,7 +205,7 @@ public class RoomService {
             else
                 perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, requesterId));
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
 
         var response = new UserPermsResponse(
                 true,
@@ -222,7 +224,7 @@ public class RoomService {
                     "");
             return new Result(200, response);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
     }
 
     public Result getUserOwnedRooms(@NotNull String userId) {
@@ -235,7 +237,7 @@ public class RoomService {
                     "");
             return new Result(200, response);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
     }
 
     /**
@@ -247,7 +249,7 @@ public class RoomService {
         Permissions perms;
         try {
             String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId == null) return serverError(500, new NullPointerException("hasPermissions: For whatever reason a room said its owner is null."));
+            if (ownerId == null) return serverError(new NullPointerException("hasPermissions: For whatever reason a room said its owner is null."));
             if (ownerId.equals(userId)) isOwner = true;
 
             if (!roomRepo.roomExists(roomId)) {
@@ -275,11 +277,17 @@ public class RoomService {
             );
             return new Result(200, response);
 
-        } catch (SQLException ex) { return serverError(500, ex); }
+        } catch (SQLException ex) { return serverError(ex); }
     }
 
-    private Result serverError(int httpCode, Exception ex) {
+    private Result serverError(Exception ex) {
         Debug.log("RoomService:generic serverError(): "+ex.toString());
+        int httpCode = switch (ex) {
+            case SQLTransientConnectionException e -> 503;
+            case SQLTimeoutException e -> 504;
+            case SQLException e -> 500;
+            default -> 500;
+        };
 
         var response = new ErrorResponse(
                 false,
