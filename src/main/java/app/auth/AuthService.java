@@ -80,7 +80,7 @@ public class AuthService {
             String sessionId = UUID.randomUUID().toString();
 
             try {
-                Token token = Token.createToken();
+                Token token = new Token();
 
                 sessionRegistry.addSession(token, sessionId, userId);
 

@@ -59,7 +59,7 @@ public class SessionRegistryTests {
         userRepo.create(testUserId, "cache_test", "qwertyuiop", System.currentTimeMillis());
     }
     void createSessions() throws NoSuchAlgorithmException, SQLException {
-        neverExpiringToken = Token.createToken();
+        neverExpiringToken = new Token();
         sessionRepo.newSession("cache_test1", testUserId, neverExpiringToken.getHashedValue(), System.currentTimeMillis(), null);
     }
 
@@ -73,7 +73,7 @@ public class SessionRegistryTests {
 
     @Test
     void addSession_cacheConstraintBroken() throws NoSuchAlgorithmException {
-        Token token = Token.createToken();
+        Token token = new Token();
 
         Assertions.assertDoesNotThrow(() -> sessionRegistry.addSession(token, "cache_test2", testUserId));
 

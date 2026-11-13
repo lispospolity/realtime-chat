@@ -11,15 +11,15 @@ public class TokenTests {
 
     @Test
     void generateTokenLengthCorrect() throws NoSuchAlgorithmException {
-        Token token = Token.createToken();
+        Token token = new Token();
 
         Assertions.assertEquals(43, token.getValue().length());
     }
 
     @Test
     void generateTokenProducesDifferentTokens() throws NoSuchAlgorithmException {
-        Token token1 = Token.createToken();
-        Token token2 = Token.createToken();
+        Token token1 = new Token();
+        Token token2 = new Token();
 
         Assertions.assertNotEquals(token1, token2);
     }

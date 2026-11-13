@@ -28,12 +28,6 @@ public final class Token {
         this.hashedToken = hashToken(token);
     }
 
-    @Deprecated
-    public static Token createToken() throws NoSuchAlgorithmException {
-        String token = generateToken();
-        return new Token(token);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Token token)) return false;
