@@ -2,6 +2,7 @@ package authService;
 
 import app.auth.AuthService;
 import app.dto.Result;
+import app.session.SessionRegistry;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;
@@ -36,7 +37,8 @@ public class AuthServiceUserTests {
     void setupAuthService() {
         userRepo = new UserRepository(dataSource);
         sessionRepo = new SessionRepository(dataSource);
-        authService = new AuthService(testConfig, userRepo, sessionRepo);
+        SessionRegistry sessionRegistry = new SessionRegistry(testConfig, sessionRepo);
+        authService = new AuthService(testConfig, userRepo, sessionRepo, sessionRegistry);
     }
 
     @Test

@@ -6,6 +6,7 @@ import app.dto.response.GenericResponse;
 import app.auth.dto.response.LoginResponse;
 import app.dto.Result;
 import app.config.AppConfig;
+import app.session.SessionRegistry;
 import app.session.SessionRepository;
 import app.user.UserRepository;
 import app.logging.Debug;
@@ -40,12 +41,13 @@ public class AuthService {
     private final UserRepository userRepo;
     private final SessionRepository sessionRepo;
 
+    private final SessionRegistry sessionRegistry;
     /**
      * Look up session object by SessionKey (also known as token)
      */
     private final ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
 
-    public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository) {
+    public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository, SessionRegistry sessionRegistry) {
         minNameLength = appConfig.minNameLength;
         maxNameLength = appConfig.maxNameLength;
         minPasswordLength = appConfig.minPasswordLength;
@@ -54,6 +56,7 @@ public class AuthService {
 
         this.userRepo = userRepository;
         this.sessionRepo = sessionRepository;
+        this.sessionRegistry = sessionRegistry;
     }
 
     public Result login(String username, String password) {
@@ -131,7 +134,7 @@ public class AuthService {
     public Result logout(String sessionKey, @Nullable String sessionId) {
         Result result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
-        String owner = authResponse.userId();
+        String owner = authResponse.session().getUserId();
 
         byte[] sessionHash;
         try {
@@ -163,13 +166,13 @@ public class AuthService {
     public Result logoutAll(String sessionKey) {
         Result result = authenticate(sessionKey);
         if (!(result.response() instanceof AuthenticationResponse authResponse)) { return result; }
-        String userId = authResponse.userId();
+        Session session = authResponse.session();
 
         try {
-            sessionRepo.deleteSessionsByUserId(userId);
-        } catch (SQLException ex) { return serverError(500, ex); }
+            sessionRegistry.removeAllUserSessions(session);
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
 
-        deleteUserSessions(userId);
+        deleteUserSessions(session.getUserId());
 
         var response = new GenericResponse(
                 true,
@@ -253,12 +256,12 @@ public class AuthService {
             return new Result(400, response);
         }
 
-        if (!sessions.containsKey(sessionKey)) return dbAuthenticate(sessionKey);
+        Session session;
+        try {
+            session = sessionRegistry.getSessionByKey(sessionKey);
+        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
 
-        Session session = sessions.get(sessionKey);
-        if (session == null || session.getUserId() == null) return dbAuthenticate(sessionKey);
-
-        if (session.expired()) {
+        if (session == null || session.expired()) {
             var response = new ErrorResponse(
                     false,
                     "Incorrect, or expired session key."
@@ -268,48 +271,10 @@ public class AuthService {
 
         var response = new AuthenticationResponse(
                 true,
-                session.getUserId(),
+                session,
                 "Successful authentication."
         );
         return new Result(200, response);
-    }
-
-    private Result dbAuthenticate(String sessionKey) {
-        if (sessionKey == null || sessionKey.isBlank()) {
-            var response = new ErrorResponse(
-                    false,
-                    "Session key cookie cannot be empty.");
-            return new Result(401, response);
-        }
-
-        try {
-            byte[] tokenHash = TokenUtils.hashToken(sessionKey);
-
-            if (sessionRepo.tokenExpired(tokenHash, System.currentTimeMillis())) {
-                var response = new ErrorResponse(
-                        false,
-                        "Incorrect, or expired session key."
-                );
-                return new Result(400, response);
-            }
-            String userId = sessionRepo.getUserIdBySessionKey(tokenHash);
-            if (userId == null) {
-                return serverError(500, new NullPointerException("AuthService:authenticate(): For whatever fuckass reason userId is null."));
-            }
-
-            String sessionId = sessionRepo.getSessionIdBySessionKey(tokenHash);
-            Long expiresAt = sessionRepo.getTokenExpiry(tokenHash);
-
-            Session session = new Session(sessionKey, userId, sessionId, expiresAt);
-            sessions.put(sessionKey, session);
-
-            var response = new AuthenticationResponse(
-                    true,
-                    session.getUserId(),
-                    "Successful authentication."
-            );
-            return new Result(200, response);
-        } catch (NoSuchAlgorithmException | SQLException ex) { return serverError(500, ex); }
     }
 
     private void deleteUserSessions(String userId) {

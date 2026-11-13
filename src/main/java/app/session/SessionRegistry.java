@@ -46,10 +46,7 @@ public class SessionRegistry {
         removeSessionFromCache(session);
     }
 
-    public void removeAllUserSessions(@NotNull String sessionKey) throws SQLException, NoSuchAlgorithmException {
-        Session session = getSessionByKey(sessionKey);
-        if (session == null) return;
-
+    public void removeAllUserSessions(@NotNull Session session) throws SQLException, NoSuchAlgorithmException {
         sessionRepo.deleteSessionsByUserId(session.getUserId());
 
         Set<Session> userSessions = sessionsByUserId.get(session.getUserId());
@@ -68,6 +65,7 @@ public class SessionRegistry {
             if (!session.expired()) return session;
 
             removeSessionFromCache(session);
+            return session;
         }
 
         byte[] hash = TokenUtils.hashToken(sessionKey);

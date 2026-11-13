@@ -32,7 +32,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         if (owner) {
             Result roomResult = roomService.getUserOwnedRooms(userId);
@@ -56,7 +56,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result roomResult = roomService.getRoomMembers(userId, roomId);
         return ResponseEntity
@@ -72,7 +72,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result roomResult = roomService.createRoom(userId);
         return ResponseEntity
@@ -90,7 +90,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result roomResult = roomService.deleteRoom(userId, roomId);
         return ResponseEntity
@@ -110,7 +110,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result userResult = userService.getUsernameById(newMemberId);
         if (!(userResult.response() instanceof UsernameByIdResponse)) {
@@ -137,7 +137,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result userResult = userService.getUsernameById(existingMemberId);
         if (!(userResult.response() instanceof UsernameByIdResponse)) {
@@ -163,7 +163,7 @@ public class RoomController {
                     .status(authResult.httpCode())
                     .body(authResult.response());
         }
-        String userId = authResponse.userId();
+        String userId = authResponse.session().getUserId();
 
         Result userResult = userService.getUsernameById(existingMemberId);
         if (!(userResult.response() instanceof UsernameByIdResponse)) {

@@ -5,6 +5,7 @@ import app.chat.ChatService;
 import app.dto.response.Response;
 import app.logging.Debug;
 import app.dto.Cookies;
+import app.session.Session;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
 import app.websocket.dto.request.JoinRoomRequest;
@@ -51,7 +52,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         String token = cookies.get("session_token");
 
         Response response = authService.authenticate(token).response();
-        if (!(response instanceof AuthenticationResponse(boolean success, String userId, String message))) {
+        if (!(response instanceof AuthenticationResponse(boolean success, Session session, String message))) {
 
             if (!(response instanceof ErrorResponse errorResponse)) return;
             conn.close(4001, errorResponse.error());
@@ -69,7 +70,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         );
         connToUserId.put(
                 conn,
-                userId
+                session.getUserId()
         );
 
         waiting.remove(conn);
@@ -87,7 +88,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
     public void onMessage(WebSocket conn, String message) {
         String token = connectionsAuthenticated.get(conn);
         Object authResponse = authService.authenticate(token).response();
-        if (!(authResponse instanceof AuthenticationResponse(boolean authSuccess, String userId, String authMessage))) {
+        if (!(authResponse instanceof AuthenticationResponse(boolean authSuccess, Session session, String authMessage))) {
 
             if (!(authResponse instanceof ErrorResponse errorResponse)) return;
             conn.close(4001, errorResponse.error());
@@ -105,7 +106,7 @@ public class ChatWebsocketHandler extends WebSocketServer {
         try {
             type = json.get("t").getAsInt();
         } catch (NumberFormatException | NullPointerException | UnsupportedOperationException ex) {
-            Debug.log("ChatWebsocketHandler: onMessage: Suspicious message coming from user Id: "+ userId +", message:"+ message);
+            Debug.log("ChatWebsocketHandler: onMessage: Suspicious message coming from user Id: "+ session.getUserId() +", message:"+ message);
             return;
         }
 
@@ -117,12 +118,12 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 try {
                     request = gson.fromJson(message, JoinRoomRequest.class);
                 } catch (JsonSyntaxException ex) {
-                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ userId);
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.getUserId());
                     return;
                 }
 
                 Object response = chatService.joinRoom(
-                        userId,
+                        session.getUserId(),
                         request.getRoom()
                 );
                 sendTo(conn, SERVER_RESPONSE.code, response);
@@ -132,12 +133,12 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 try {
                     request = gson.fromJson(message, SendMessageRequest.class);
                 } catch (JsonSyntaxException ex) {
-                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ userId);
+                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.getUserId());
                     return;
                 }
 
                 MessageDispatch<?> dispatch = chatService.sendMessage(
-                        userId,
+                        session.getUserId(),
                         request.getRoom(),
                         request.getMessageId(),
                         request.getMessage()
