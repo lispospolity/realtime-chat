@@ -87,6 +87,23 @@ public class SessionRegistryTests {
         Assertions.assertEquals("Unique sessionKey constraint broken.", cacheEx.getMessage());
     }
 
+    @Test
+    void removeSessionBySessionId_success() throws SQLException {
+        Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+
+        Assertions.assertDoesNotThrow(() -> sessionRegistry.removeSessionBySessionId("cache_test1"));
+
+        Assertions.assertNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+    }
+
+    @Test
+    void removeSessionBySessionId_nonexistentId() throws SQLException {
+        Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+
+        Assertions.assertDoesNotThrow(() -> sessionRegistry.removeSessionBySessionId(""));
+
+        Assertions.assertNotNull(sessionRepo.getSessionBySessionKey(neverExpiringToken.getHashedValue()));
+    }
 
     @AfterEach
     void cleanupDatabase() throws SQLException {
