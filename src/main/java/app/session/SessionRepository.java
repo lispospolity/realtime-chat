@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 
 @Repository
 public class SessionRepository {
@@ -65,6 +66,28 @@ public class SessionRepository {
             statement.setString(1, sessionId);
 
             statement.executeUpdate();
+        }
+    }
+
+    public @Nullable SessionRecord getSessionBySessionKey(byte[] sessionKey) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("""
+                    SELECT session_id, user_id, expires_at FROM user_sessions WHERE sesh_key = ?;
+                    """)
+        ) {
+            statement.setBytes(1, sessionKey);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (!resultSet.next()) return null;
+            String sessionId = resultSet.getString("session_id");
+            String userId = resultSet.getString("user_id");
+
+            long expiry = resultSet.getLong("expires_at");
+            Long expiresAt = resultSet.wasNull() ? null : expiry;
+
+            if (sessionId == null || userId == null) return null;
+            return new SessionRecord(sessionId, userId, sessionKey.clone(), expiresAt);
         }
     }
 

@@ -1,6 +1,7 @@
 package database;
 
 import app.database.DataSourceFactory;
+import app.session.SessionRecord;
 import com.zaxxer.hikari.HikariDataSource;
 import app.config.AppConfig;
 import app.config.Env;
@@ -142,6 +143,33 @@ public class SeshRepoTest {
         Assertions.assertNull(sessionId);
 
         cleanupNeeded = true;
+    }
+
+    @Test
+    void getSessionBySessionKey_correctValues() throws SQLException {
+        SessionRecord record = testRepo.getSessionBySessionKey(existingTokenHash);
+
+        Assertions.assertNotNull(record);
+        Assertions.assertEquals("repo_existingSessionId", record.sessionId());
+        Assertions.assertEquals("repo_testId", record.userId());
+        Assertions.assertEquals(0L, record.expiresAt());
+    }
+
+    @Test
+    void getSessionBySessionKey_neverExpiring() throws SQLException {
+        SessionRecord record = testRepo.getSessionBySessionKey(neverExpiringHash);
+
+        Assertions.assertNotNull(record);
+        Assertions.assertEquals("repo_neverExpires", record.sessionId());
+        Assertions.assertEquals("repo_testId", record.userId());
+        Assertions.assertNull(record.expiresAt());
+    }
+
+    @Test
+    void getSessionBySessionKey_nonexistentSession() throws SQLException {
+        SessionRecord record = testRepo.getSessionBySessionKey(newTokenHash);
+
+        Assertions.assertNull(record);
     }
 
     @Test
