@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,7 +28,8 @@ public class SessionRegistry {
     }
 
     public void addSession(Token token, String sessionId, String userId) throws SQLException, NoSuchAlgorithmException {
-        if (sessionsByToken.containsKey(token) || sessionsById.containsKey(sessionId)) throw new SQLException("Unique sessionKey constraint broken.");
+        if (sessionsByToken.containsKey(token) || sessionsById.containsKey(sessionId))
+            throw new SQLIntegrityConstraintViolationException("Unique sessionKey constraint broken.");
 
         long timeNow = System.currentTimeMillis();
         sessionRepo.newSession(sessionId, userId, token.getHashedValue(), timeNow, timeNow + tokenExpiryInMillis);
