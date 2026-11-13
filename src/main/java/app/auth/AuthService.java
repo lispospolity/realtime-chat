@@ -35,11 +35,10 @@ public class AuthService {
     private final long tokenExpiryInMillis;
 
     private final UserRepository userRepo;
-    private final SessionRepository sessionRepo;
 
     private final SessionRegistry sessionRegistry;
 
-    public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRepository sessionRepository, SessionRegistry sessionRegistry) {
+    public AuthService(AppConfig appConfig, UserRepository userRepository, SessionRegistry sessionRegistry) {
         minNameLength = appConfig.minNameLength;
         maxNameLength = appConfig.maxNameLength;
         minPasswordLength = appConfig.minPasswordLength;
@@ -47,7 +46,6 @@ public class AuthService {
         tokenExpiryInMillis = appConfig.tokenExpiryInMillis;
 
         this.userRepo = userRepository;
-        this.sessionRepo = sessionRepository;
         this.sessionRegistry = sessionRegistry;
     }
 
@@ -118,7 +116,7 @@ public class AuthService {
         try {
             if (sessionId == null) sessionId = session.getSessionId();
 
-            if (!sessionRepo.sessionOwnerCheck(sessionId, session.getUserId())) {
+            if (!sessionRegistry.sessionOwnerCheck(sessionId, session.getUserId())) {
                 var response = new ErrorResponse(
                         false,
                         "Incorrect session id, or you're not the owner of this session."

@@ -38,7 +38,7 @@ public class AuthServiceUserTests {
         userRepo = new UserRepository(dataSource);
         sessionRepo = new SessionRepository(dataSource);
         SessionRegistry sessionRegistry = new SessionRegistry(testConfig, sessionRepo);
-        authService = new AuthService(testConfig, userRepo, sessionRepo, sessionRegistry);
+        authService = new AuthService(testConfig, userRepo, sessionRegistry);
     }
 
     @Test
