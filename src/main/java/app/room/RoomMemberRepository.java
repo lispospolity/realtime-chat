@@ -85,13 +85,13 @@ public class RoomMemberRepository {
         ) {
             statement.setString(1, userId);
 
-            ResultSet resultSet = statement.executeQuery();
-
-            List<Integer> rooms = new ArrayList<>();
-            while (resultSet.next()) {
-                rooms.add(resultSet.getInt(1));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<Integer> rooms = new ArrayList<>();
+                while (resultSet.next()) {
+                    rooms.add(resultSet.getInt(1));
+                }
+                return rooms;
             }
-            return rooms;
         }
     }
 
@@ -105,15 +105,15 @@ public class RoomMemberRepository {
         ) {
             statement.setInt(1, roomId);
 
-            ResultSet resultSet = statement.executeQuery();
-
-            List<RoomMember> members = new ArrayList<>();
-            while (resultSet.next()) {
-                String userId = resultSet.getString("user_id");
-                int perms = resultSet.getInt("perms");
-                members.add(new RoomMember(userId, new Permissions(perms)));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<RoomMember> members = new ArrayList<>();
+                while (resultSet.next()) {
+                    String userId = resultSet.getString("user_id");
+                    int perms = resultSet.getInt("perms");
+                    members.add(new RoomMember(userId, new Permissions(perms)));
+                }
+                return members;
             }
-            return members;
         }
     }
 
@@ -129,11 +129,12 @@ public class RoomMemberRepository {
             statement.setInt(1, roomId);
             statement.setString(2, userId);
 
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
             }
-            return 0;
         }
     }
 
@@ -148,8 +149,9 @@ public class RoomMemberRepository {
             statement.setInt(1, roomId);
             statement.setString(2, userId);
 
-            ResultSet resultSet = statement.executeQuery();
-            return resultSet.next();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
         }
     }
 }
