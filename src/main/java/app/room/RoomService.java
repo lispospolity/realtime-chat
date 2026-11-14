@@ -67,11 +67,11 @@ public class RoomService {
     public Result addToRoom(@NotNull String requesterId, int roomId, @NotNull String newMemberId, int inputPermissions) {
         Result permsResult = hasPermissions(requesterId, roomId, Permissions.ADD_USERS);
         if (!(permsResult.response() instanceof
-                HasPermissionsResponse(boolean success, String ownerId, Permissions requesterPerms, String message)))
+                HasPermissionsResponse(boolean success, Room room, Permissions requesterPerms, String message)))
             return permsResult;
         if (!success) return permsResult;
 
-        boolean ownerRequest = ownerId.equals(requesterId);
+        boolean ownerRequest = requesterId.equals(room.getOwner());
         try {
             Permissions permissions = new Permissions(inputPermissions);
             if (!ownerRequest) permissions.crunchTo(requesterPerms);
@@ -102,20 +102,12 @@ public class RoomService {
     public Result updateMember(@NotNull String requesterId, int roomId, @NotNull String existingMemberId, int inputPermissions) {
         Result permsResult = hasPermissions(requesterId, roomId, Permissions.CHANGE_PERMISSIONS);
         if (!(permsResult.response() instanceof
-                HasPermissionsResponse(boolean success, String ownerId, Permissions requesterPerms, String message)))
+                HasPermissionsResponse(boolean success, Room room, Permissions requesterPerms, String message)))
             return permsResult;
         if (!success) return permsResult;
 
-        boolean ownerRequest = ownerId.equals(requesterId);
+        boolean ownerRequest = requesterId.equals(room.getOwner());
         try {
-            Room room = roomRegistry.getRoomById(roomId);
-            if (room == null) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist.");
-                return new Result(404, response);
-            }
-
             RoomMember member = roomRegistry.getRoomMember(roomId, existingMemberId);
             if (member == null) {
                 var response = new ErrorResponse(
@@ -144,19 +136,11 @@ public class RoomService {
     public Result removeMember(@NotNull String requesterId, int roomId, @NotNull String existingMemberId) {
         Result permsResult = hasPermissions(requesterId, roomId, Permissions.REMOVE_USERS);
         if (!(permsResult.response() instanceof
-                HasPermissionsResponse(boolean success, String ownerId, Permissions requesterPerms, String message)))
+                HasPermissionsResponse(boolean success, Room room, Permissions requesterPerms, String message)))
             return permsResult;
         if (!success) return permsResult;
 
         try {
-            Room room = roomRegistry.getRoomById(roomId);
-            if (room == null) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist.");
-                return new Result(404, response);
-            }
-
             RoomMember member = roomRegistry.getRoomMember(roomId, existingMemberId);
             if (member == null) {
                 var response = new ErrorResponse(
@@ -264,7 +248,7 @@ public class RoomService {
 
     /**
      * Will return max permissions for the owner.
-     * Best use case is inputting only one permission, because it will be checking all of them.
+     * Best use case is inputting only one permission, because it will be checking all of them with a perms.allow() method.
      */
     public Result hasPermissions(@NotNull String userId, int roomId, int permissions) {
         boolean isOwner = false;
@@ -301,7 +285,7 @@ public class RoomService {
 
             var response = new HasPermissionsResponse(
                     true,
-                    ownerId,
+                    room,
                     perms,
                     ""
             );
