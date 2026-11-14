@@ -59,6 +59,12 @@ public class RoomRegistry {
         cacheNewMember(room, new RoomMember(memberId, perms));
     }
 
+    public void updateMemberPerms(Room room, RoomMember member, Permissions newPerms) throws SQLException {
+        roomMemberRepo.changePerms(room.getRoomId(), member.getMemberId(), newPerms.intValue());
+
+        member.overwritePerms(newPerms);
+    }
+
     /**
      * @return Null only when room is nonexistent (checks both cache and db)
      */
