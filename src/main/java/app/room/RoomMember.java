@@ -10,7 +10,7 @@ public class RoomMember {
         return memberId;
     }
 
-    private final Permissions perms;
+    private Permissions perms;
     public Permissions getPermissions() {
         return perms;
     }
@@ -18,6 +18,10 @@ public class RoomMember {
     public RoomMember(@NotNull String memberId, @NotNull Permissions permissions) {
         this.memberId = memberId;
         this.perms = permissions;
+    }
+
+    public void overwritePerms(@NotNull Permissions newPerms) {
+        this.perms = newPerms;
     }
 
     public static RoomMember createOwner(@NotNull String ownerId) {
