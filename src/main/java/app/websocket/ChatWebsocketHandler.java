@@ -2,13 +2,13 @@ package app.websocket;
 
 import app.auth.AuthService;
 import app.chat.ChatService;
+import app.dto.response.GenericResponse;
 import app.dto.response.Response;
 import app.logging.Debug;
 import app.dto.Cookies;
 import app.session.Session;
 import app.websocket.dto.MessageDispatch;
 import app.websocket.dto.MessageType;
-import app.websocket.dto.request.JoinRoomRequest;
 import app.websocket.dto.request.SendMessageRequest;
 import app.auth.dto.response.AuthenticationResponse;
 import app.dto.response.ErrorResponse;
@@ -78,7 +78,6 @@ public class ChatWebsocketHandler extends WebSocketServer {
 
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        if (connectionsAuthenticated.containsKey(conn)) chatService.userLeft(connectionsAuthenticated.get(conn));
         waiting.remove(conn);
         connectionsAuthenticated.remove(conn);
         connToUserId.remove(conn);
@@ -113,21 +112,6 @@ public class ChatWebsocketHandler extends WebSocketServer {
         MessageType msgType = MessageType.fromCode(type);
 
         switch (msgType) {
-            case JOIN_ROOM -> {
-                JoinRoomRequest request;
-                try {
-                    request = gson.fromJson(message, JoinRoomRequest.class);
-                } catch (JsonSyntaxException ex) {
-                    Debug.log("ChatWebsocketHandler: onMessage: Invalid json coming from user Id: "+ session.getUserId());
-                    return;
-                }
-
-                Object response = chatService.joinRoom(
-                        session.getUserId(),
-                        request.getRoom()
-                );
-                sendTo(conn, SERVER_RESPONSE.code, response);
-            }
             case SEND_MESSAGE -> {
                 SendMessageRequest request;
                 try {
@@ -149,7 +133,10 @@ public class ChatWebsocketHandler extends WebSocketServer {
                 if (dispatch.recipients() == null) return;
                 sendTo(dispatch.recipients(), MessageType.INCOMING_MESSAGE.code, dispatch.messageToRecipients());
             }
-            default -> {}
+            default -> {
+                GenericResponse response = new GenericResponse(false, "Unsupported operation.");
+                sendTo(conn, SERVER_RESPONSE.code, response);
+            }
         }
     }
 
