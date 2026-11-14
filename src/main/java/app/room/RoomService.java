@@ -187,39 +187,6 @@ public class RoomService {
         } catch (SQLException ex) { return serverError(ex); }
     }
 
-    public Result getUserPerms(@NotNull String requesterId, int roomId) {
-        Permissions perms;
-        try {
-            //TODO RoomRegistry getRoomById == null? here
-            if (!roomRepo.roomExists(roomId)) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist");
-                return new Result(404, response);
-            }
-
-            //TODO RoomRegistry getRoomMember == null? here or just merge these two, i dunno be creative
-            if (!roomMemberRepo.userInRoom(roomId, requesterId)) {
-                var response = new ErrorResponse(
-                        false,
-                        "You're not a member of this room.");
-                return new Result(403, response);
-            }
-
-            if (requesterId.equals(roomRepo.getOwner(roomId)))
-                perms = new Permissions(Permissions.getMaxPerms());
-            else
-                perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, requesterId));
-
-        } catch (SQLException ex) { return serverError(ex); }
-
-        var response = new UserPermsResponse(
-                true,
-                perms,
-                "");
-        return new Result(200, response);
-    }
-
     public Result getUserRooms(@NotNull String userId) {
         try {
             List<Integer> rooms = roomMemberRepo.getUserRooms(userId);
@@ -235,7 +202,6 @@ public class RoomService {
 
     public Result getUserOwnedRooms(@NotNull String userId) {
         try {
-            //TODO something with this
             List<Integer> rooms = roomRepo.getUserOwnedRooms(userId);
 
             var response = new UserRoomsResponse(
