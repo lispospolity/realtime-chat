@@ -159,23 +159,13 @@ public class RoomService {
     }
 
     public Result getRoomMembers(@NotNull String requesterId, int roomId) {
+        Result permsResult = hasPermissions(requesterId, roomId, Permissions.MINIMAL);
+        if (!(permsResult.response() instanceof
+                HasPermissionsResponse(boolean success, Room room, Permissions requesterPerms, String message)))
+            return permsResult;
+        if (!success) return permsResult;
+
         try {
-            Room room = roomRegistry.getRoomById(roomId);
-            if (room == null) {
-                var response = new ErrorResponse(
-                        false,
-                        "This room does not exist.");
-                return new Result(404, response);
-            }
-
-            RoomMember member = roomRegistry.getRoomMember(roomId, requesterId);
-            if (member == null) {
-                var response = new ErrorResponse(
-                        false,
-                        "You do not have access to this room.");
-                return new Result(403, response);
-            }
-
             List<RoomMember> members = roomMemberRepo.getRoomMembers(roomId);
 
             var response = new RoomMembersResponse(

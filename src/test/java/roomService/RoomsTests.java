@@ -204,7 +204,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You do not have access to this room.", response.error());
+        Assertions.assertEquals("You're not a member of this room.", response.error());
     }
 
     @Test
