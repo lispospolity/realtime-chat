@@ -76,15 +76,15 @@ public class RoomService {
             Permissions permissions = new Permissions(inputPermissions);
             if (!ownerRequest) permissions.crunchTo(requesterPerms);
 
-            //TODO RoomRegistry getRoomMember != null? here
-            if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
+            RoomMember member = roomRegistry.getRoomMember(roomId, newMemberId);
+            if (member != null) {
                 var response = new ErrorResponse(
                         false,
                         "This user is already in the room.");
                 return new Result(409, response);
             }
-            //TODO RoomRegistry createMember here
-            roomMemberRepo.addToRoom(roomId, newMemberId, permissions.intValue());
+
+            roomRegistry.createMember(roomId, newMemberId, permissions);
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
