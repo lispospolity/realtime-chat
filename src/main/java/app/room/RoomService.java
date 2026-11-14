@@ -108,8 +108,16 @@ public class RoomService {
 
         boolean ownerRequest = ownerId.equals(requesterId);
         try {
-            //TODO RoomRegistry getRoomMember == null? here
-            if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
+            Room room = roomRegistry.getRoomById(roomId);
+            if (room == null) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result(404, response);
+            }
+
+            RoomMember member = roomRegistry.getRoomMember(roomId, existingMemberId);
+            if (member == null) {
                 var response = new ErrorResponse(
                         false,
                         "This member is not in the room.");
@@ -119,10 +127,7 @@ public class RoomService {
             Permissions permissions = new Permissions(inputPermissions);
             if (!ownerRequest) permissions.crunchTo(requesterPerms);
 
-            //TODO
-            // new RoomMember updatePerms method
-            // new RoomRegistry updateMember method
-            roomMemberRepo.changePerms(roomId, existingMemberId, permissions.intValue());
+            roomRegistry.updateMemberPerms(room, member, permissions);
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
                     false,
