@@ -65,6 +65,12 @@ public class RoomRegistry {
         member.overwritePerms(newPerms);
     }
 
+    public void removeMember(Room room, RoomMember member) throws SQLException {
+        roomMemberRepo.removeFromRoom(room.getRoomId(), member.getMemberId());
+
+        room.removeMember(member);
+    }
+
     /**
      * @return Null only when room is nonexistent (checks both cache and db)
      */
