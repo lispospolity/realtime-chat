@@ -1,5 +1,6 @@
 package app.room;
 
+import jakarta.annotation.Nullable;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
@@ -117,8 +118,10 @@ public class RoomMemberRepository {
         }
     }
 
-
-    public int getUserPermissions(int roomId, String userId) throws SQLException {
+    /**
+     * if it returns as null that means the user does not exist in this room
+     */
+    public @Nullable Integer getUserPermissions(int roomId, String userId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
                      SELECT perms FROM room_members WHERE
@@ -133,7 +136,7 @@ public class RoomMemberRepository {
                 if (resultSet.next()) {
                     return resultSet.getInt(1);
                 }
-                return 0;
+                return null;
             }
         }
     }

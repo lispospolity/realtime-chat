@@ -51,10 +51,10 @@ public class RoomsTests {
         roomService = new RoomService(roomRepo, roomMemberRepo, roomRegistry);
 
         testingRoom = roomRepo.create(testOwnerNoPerms, System.currentTimeMillis());
-        roomMemberRepo.addToRoom(testingRoom, testOwnerNoPerms, 0);
+        roomMemberRepo.addToRoom(testingRoom, testOwnerNoPerms, Permissions.MINIMAL);
 
         roomMemberRepo.addToRoom(testingRoom, testMemberAllPerms, Permissions.getMaxPerms());
-        roomMemberRepo.addToRoom(testingRoom, testMemberNoPerms, 0);
+        roomMemberRepo.addToRoom(testingRoom, testMemberNoPerms, Permissions.MINIMAL);
     }
 
     @Test
@@ -108,7 +108,7 @@ public class RoomsTests {
 
     @Test
     void updateMember_success() throws SQLException {
-        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+        Assertions.assertEquals(Permissions.MINIMAL, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
 
         Result result = roomService.updateMember(testMemberAllPerms, testingRoom, testMemberNoPerms, Permissions.READ_MESSAGES);
 
@@ -117,11 +117,11 @@ public class RoomsTests {
 
     @Test
     void updateMember_notEnoughPerms() throws SQLException {
-        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+        Assertions.assertEquals(Permissions.MINIMAL, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
 
         Result result = roomService.updateMember(testMemberNoPerms, testingRoom, testMemberNoPerms, Permissions.READ_MESSAGES);
 
-        Assertions.assertEquals(0, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
+        Assertions.assertEquals(Permissions.MINIMAL, roomMemberRepo.getUserPermissions(testingRoom, testMemberNoPerms));
     }
 
     @Test
@@ -204,7 +204,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You're not a member of this room.", response.error());
+        Assertions.assertEquals("You do not have access to this room.", response.error());
     }
 
     @Test

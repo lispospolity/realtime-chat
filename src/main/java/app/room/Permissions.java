@@ -1,6 +1,7 @@
 package app.room;
 
 public class Permissions {
+    public static final int MINIMAL = 0;
     public static final int READ_MESSAGES = 1<<0;
     public static final int SEND_MESSAGES = 1<<1;
     public static final int DELETE_MESSAGES = 1<<2;
@@ -17,6 +18,7 @@ public class Permissions {
     }
 
     public boolean allow(int desiredPerm) {
+        if (desiredPerm == 0) return true;
         return (permissions & desiredPerm) != 0;
     }
 

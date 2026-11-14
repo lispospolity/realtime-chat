@@ -19,8 +19,8 @@ public class PermissionsTest {
     }
 
     @Test
-    void notUserPerms() {
-        int notOwner = 0;
+    void minimalPerms() {
+        int notOwner = Permissions.MINIMAL;
 
         Permissions perms = new Permissions(notOwner);
 
@@ -56,4 +56,14 @@ public class PermissionsTest {
         Assertions.assertEquals(requester, requesterPerms.intValue());
     }
 
+    @Test
+    void allow_minimal() {
+        Permissions min = new Permissions(Permissions.MINIMAL);
+        Permissions mid = new Permissions(Permissions.REMOVE_USERS);
+        Permissions max = new Permissions(Permissions.getMaxPerms());
+
+        Assertions.assertTrue(min.allow(Permissions.MINIMAL));
+        Assertions.assertTrue(mid.allow(Permissions.MINIMAL));
+        Assertions.assertTrue(max.allow(Permissions.MINIMAL));
+    }
 }

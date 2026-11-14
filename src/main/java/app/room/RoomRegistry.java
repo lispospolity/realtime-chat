@@ -121,8 +121,8 @@ public class RoomRegistry {
     }
 
     private @Nullable RoomMember pullMemberFromDatabase(@NotNull Room room, @NotNull String userId) throws SQLException {
-        if (!roomMemberRepo.userInRoom(room.getRoomId(), userId)) return null;
-        int perms = roomMemberRepo.getUserPermissions(room.getRoomId(), userId);
+        Integer perms = roomMemberRepo.getUserPermissions(room.getRoomId(), userId);
+        if (perms == null) return null;
 
         return new RoomMember(userId, new Permissions(perms));
     }

@@ -63,7 +63,7 @@ public class RoomMemberRepoTest {
 
     @Test
     void addNewMember() throws SQLException{
-        Assertions.assertEquals(0, testRepo.getUserPermissions(emptyRoom, "repo_roomMember"));
+        Assertions.assertNull(testRepo.getUserPermissions(emptyRoom, "repo_roomMember"));
 
         Assertions.assertDoesNotThrow(() -> testRepo.addToRoom(emptyRoom, "repo_roomMember", 1));
 
@@ -91,7 +91,7 @@ public class RoomMemberRepoTest {
 
     @Test
     void getNonexistentPerms() throws SQLException {
-        Assertions.assertEquals(0, testRepo.getUserPermissions(emptyRoom, "repo_nonexistent"));
+        Assertions.assertNull(testRepo.getUserPermissions(emptyRoom, "repo_nonexistent"));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class RoomMemberRepoTest {
 
         Assertions.assertDoesNotThrow(() -> testRepo.removeFromRoom(fullRoom, "repo_roomMember"));
 
-        Assertions.assertEquals(0, testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
+        Assertions.assertNull(testRepo.getUserPermissions(fullRoom, "repo_roomMember"));
     }
 
     @AfterEach

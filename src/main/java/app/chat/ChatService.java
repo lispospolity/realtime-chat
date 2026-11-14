@@ -24,7 +24,7 @@ public class ChatService {
     }
 
     public @NotNull Response joinRoom(String userId, int roomId) {
-        Response response = roomService.getUserPerms(userId, roomId).response();
+        Response response = roomService.hasPermissions(userId, roomId, Permissions.MINIMAL).response();
         if (!(response instanceof UserPermsResponse(boolean success, Permissions perms, String message)))
             return response;
 
