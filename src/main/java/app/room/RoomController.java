@@ -40,7 +40,6 @@ public class RoomController {
                     .status(roomResult.httpCode())
                     .body(roomResult.response());
         }
-        //TODO not sure if JSON can parse List<RoomMember> correctly
         Result roomResult = roomService.getUserRooms(userId);
         return ResponseEntity
                 .status(roomResult.httpCode())
