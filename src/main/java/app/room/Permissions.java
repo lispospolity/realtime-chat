@@ -1,5 +1,7 @@
 package app.room;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public class Permissions {
     public static final int MINIMAL = 0;
     public static final int READ_MESSAGES = 1<<0;
@@ -10,6 +12,7 @@ public class Permissions {
     public static final int CHANGE_PERMISSIONS = 1<<5;
 
     private int permissions;
+    @JsonValue
     public int intValue() { return permissions; }
 
     public Permissions(int perms) throws IllegalArgumentException {
