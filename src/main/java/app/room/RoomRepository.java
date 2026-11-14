@@ -30,11 +30,12 @@ public class RoomRepository {
             statement.setLong(2, timeNow);
 
             statement.executeUpdate();
-            ResultSet resultSet = statement.getGeneratedKeys();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
+            try (ResultSet resultSet = statement.getGeneratedKeys()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                throw new SQLException("Room created by " + ownerId + ", but no generated ID was returned");
             }
-            throw new SQLException("Room created by " + ownerId + ", but no generated ID was returned");
         }
     }
 
@@ -59,11 +60,12 @@ public class RoomRepository {
         ) {
             statement.setInt(1, roomId);
 
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getString(1);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getString(1);
+                }
+                return null;
             }
-            return null;
         }
     }
 
@@ -77,13 +79,13 @@ public class RoomRepository {
         ) {
             statement.setString(1, userId);
 
-            ResultSet resultSet = statement.executeQuery();
-
-            List<Integer> rooms = new ArrayList<>();
-            while (resultSet.next()) {
-                rooms.add(resultSet.getInt(1));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<Integer> rooms = new ArrayList<>();
+                while (resultSet.next()) {
+                    rooms.add(resultSet.getInt(1));
+                }
+                return rooms;
             }
-            return rooms;
         }
     }
 
@@ -101,9 +103,9 @@ public class RoomRepository {
         ) {
             statement.setInt(1, roomId);
 
-            ResultSet resultSet = statement.executeQuery();
-
-            return resultSet.next();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
         }
     }
 }
