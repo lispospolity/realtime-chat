@@ -159,19 +159,20 @@ public class RoomService {
     }
 
     public Result getRoomMembers(@NotNull String requesterId, int roomId) {
-        //TODO sessionRegistry getRoomMembers or whatever you come up with
         try {
-            if (!roomRepo.roomExists(roomId)) {
+            Room room = roomRegistry.getRoomById(roomId);
+            if (room == null) {
                 var response = new ErrorResponse(
                         false,
-                        "This room does not exist");
+                        "This room does not exist.");
                 return new Result(404, response);
             }
 
-            if (!roomMemberRepo.userInRoom(roomId, requesterId)) {
+            RoomMember member = roomRegistry.getRoomMember(roomId, requesterId);
+            if (member == null) {
                 var response = new ErrorResponse(
                         false,
-                        "You're not a member of this room.");
+                        "You do not have access to this room.");
                 return new Result(403, response);
             }
 
@@ -254,7 +255,6 @@ public class RoomService {
         boolean isOwner = false;
         try {
             Room room = roomRegistry.getRoomById(roomId);
-
             if (room == null) {
                 var response = new ErrorResponse(
                         false,
