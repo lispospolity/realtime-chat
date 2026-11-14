@@ -76,17 +76,17 @@ public class SessionRepository {
         ) {
             statement.setBytes(1, sessionKey);
 
-            ResultSet resultSet = statement.executeQuery();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) return null;
+                String sessionId = resultSet.getString("session_id");
+                String userId = resultSet.getString("user_id");
 
-            if (!resultSet.next()) return null;
-            String sessionId = resultSet.getString("session_id");
-            String userId = resultSet.getString("user_id");
+                long expiry = resultSet.getLong("expires_at");
+                Long expiresAt = resultSet.wasNull() ? null : expiry;
 
-            long expiry = resultSet.getLong("expires_at");
-            Long expiresAt = resultSet.wasNull() ? null : expiry;
-
-            if (sessionId == null || userId == null) return null;
-            return new SessionRecord(sessionId, userId, sessionKey.clone(), expiresAt);
+                if (sessionId == null || userId == null) return null;
+                return new SessionRecord(sessionId, userId, sessionKey.clone(), expiresAt);
+            }
         }
     }
 
@@ -104,8 +104,9 @@ public class SessionRepository {
             statement.setBytes(1, sessionKey);
             statement.setLong(2, timeNow);
 
-            ResultSet resultSet = statement.executeQuery();
-            return !resultSet.next();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return !resultSet.next();
+            }
         }
     }
 
@@ -120,8 +121,9 @@ public class SessionRepository {
             statement.setString(1, sessionId);
             statement.setString(2, userId);
 
-            ResultSet resultSet = statement.executeQuery();
-            return resultSet.next();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
         }
     }
 }
