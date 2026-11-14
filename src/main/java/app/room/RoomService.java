@@ -16,10 +16,12 @@ import java.util.List;
 public class RoomService {
     private final RoomRepository roomRepo;
     private final RoomMemberRepository roomMemberRepo;
+    private final RoomRegistry roomRegistry;
 
-    public RoomService(RoomRepository roomRepo, RoomMemberRepository roomMemberRepo) {
+    public RoomService(RoomRepository roomRepo, RoomMemberRepository roomMemberRepo, RoomRegistry roomRegistry) {
         this.roomRepo = roomRepo;
         this.roomMemberRepo = roomMemberRepo;
+        this.roomRegistry = roomRegistry;
     }
 
     /**
@@ -30,8 +32,7 @@ public class RoomService {
     public Result createRoom(@NotNull String requesterId) {
         int roomId;
         try {
-            roomId = roomRepo.create(requesterId, System.currentTimeMillis());
-            roomMemberRepo.addToRoom(roomId, requesterId, Permissions.getMaxPerms());
+            roomId = roomRegistry.createRoom(requesterId);
         } catch (SQLException ex) { return serverError(ex); }
 
         var response = new CreateRoomResponse(
@@ -43,15 +44,14 @@ public class RoomService {
 
     public Result deleteRoom(@NotNull String requesterId, int roomId) {
         try {
-            String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId == null || !ownerId.equals(requesterId)) {
+            if (roomRegistry.isOwner(roomId, requesterId)) {
                 var response = new ErrorResponse(
                         false,
                         "This room either does not exist, or you are not the owner.");
                 return new Result(404, response);
             }
 
-            roomRepo.deleteRoom(roomId);
+            roomRegistry.removeRoom(roomId);
 
         } catch (SQLException ex) { return serverError(ex); }
 
@@ -76,13 +76,14 @@ public class RoomService {
             Permissions permissions = new Permissions(inputPermissions);
             if (!ownerRequest) permissions.crunchTo(requesterPerms);
 
+            //TODO RoomRegistry getRoomMember != null? here
             if (roomMemberRepo.userInRoom(roomId, newMemberId)) {
                 var response = new ErrorResponse(
                         false,
                         "This user is already in the room.");
                 return new Result(409, response);
             }
-
+            //TODO RoomRegistry createMember here
             roomMemberRepo.addToRoom(roomId, newMemberId, permissions.intValue());
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
@@ -107,6 +108,7 @@ public class RoomService {
 
         boolean ownerRequest = ownerId.equals(requesterId);
         try {
+            //TODO RoomRegistry getRoomMember == null? here
             if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
                 var response = new ErrorResponse(
                         false,
@@ -117,6 +119,9 @@ public class RoomService {
             Permissions permissions = new Permissions(inputPermissions);
             if (!ownerRequest) permissions.crunchTo(requesterPerms);
 
+            //TODO
+            // new RoomMember updatePerms method
+            // new RoomRegistry updateMember method
             roomMemberRepo.changePerms(roomId, existingMemberId, permissions.intValue());
         } catch (IllegalArgumentException ex) {
             var response = new ErrorResponse(
@@ -139,6 +144,7 @@ public class RoomService {
         if (!success) return permsResult;
 
         try {
+            //TODO RoomRegistry getRoomMember == null? here
             if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
                 var response = new ErrorResponse(
                         false,
@@ -146,6 +152,8 @@ public class RoomService {
                 return new Result(404, response);
             }
 
+            //TODO
+            // new RoomRegistry removeRoomMember method
             roomMemberRepo.removeFromRoom(roomId, existingMemberId);
 
             var response = new GenericResponse(
@@ -157,6 +165,7 @@ public class RoomService {
     }
 
     public Result getRoomMembers(@NotNull String requesterId, int roomId) {
+        //TODO sessionRegistry getRoomMembers or whatever you come up with
         try {
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
@@ -172,7 +181,7 @@ public class RoomService {
                 return new Result(403, response);
             }
 
-            List<String> members = roomMemberRepo.getRoomMembers(roomId);
+            List<RoomMember> members = roomMemberRepo.getRoomMembers(roomId);
 
             var response = new RoomMembersResponse(
                     true,
@@ -186,6 +195,7 @@ public class RoomService {
     public Result getUserPerms(@NotNull String requesterId, int roomId) {
         Permissions perms;
         try {
+            //TODO RoomRegistry getRoomById == null? here
             if (!roomRepo.roomExists(roomId)) {
                 var response = new ErrorResponse(
                         false,
@@ -193,6 +203,7 @@ public class RoomService {
                 return new Result(404, response);
             }
 
+            //TODO RoomRegistry getRoomMember == null? here or just merge these two, i dunno be creative
             if (!roomMemberRepo.userInRoom(roomId, requesterId)) {
                 var response = new ErrorResponse(
                         false,
@@ -229,6 +240,7 @@ public class RoomService {
 
     public Result getUserOwnedRooms(@NotNull String userId) {
         try {
+            //TODO something with this
             List<Integer> rooms = roomRepo.getUserOwnedRooms(userId);
 
             var response = new UserRoomsResponse(
@@ -246,23 +258,31 @@ public class RoomService {
      */
     public Result hasPermissions(@NotNull String userId, int roomId, int permissions) {
         boolean isOwner = false;
-        Permissions perms;
         try {
-            String ownerId = roomRepo.getOwner(roomId);
-            if (ownerId == null) return serverError(new NullPointerException("hasPermissions: For whatever reason a room said its owner is null."));
-            if (ownerId.equals(userId)) isOwner = true;
+            Room room = roomRegistry.getRoomById(roomId);
 
-            if (!roomRepo.roomExists(roomId)) {
+            if (room == null) {
                 var response = new ErrorResponse(
                         false,
                         "This room does not exist.");
                 return new Result(404, response);
             }
 
-            if (!isOwner) perms = new Permissions(roomMemberRepo.getUserPermissions(roomId, userId));
-            else perms = new Permissions(Permissions.getMaxPerms());
+            String ownerId = room.getOwner();
 
-            if (!perms.allow(permissions) && !isOwner) {
+            if (ownerId.equals(userId)) isOwner = true;
+
+            RoomMember member = roomRegistry.getRoomMember(roomId, userId);
+            if (member == null) {
+                var response = new ErrorResponse(
+                        false,
+                        "You're not a member of this room.");
+                return new Result(403, response);
+            }
+
+            Permissions perms = member.getPermissions();
+
+            if (!isOwner && !perms.allow(permissions)) {
                 var response = new ErrorResponse(
                         false,
                         "You do not have the required permissions for this action.");

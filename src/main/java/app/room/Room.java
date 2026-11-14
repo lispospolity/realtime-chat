@@ -1,5 +1,6 @@
 package app.room;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.HashMap;
@@ -7,7 +8,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class Room {
+public final class Room {
     private final int roomId;
     public int getRoomId() { return roomId; }
 
@@ -27,12 +28,16 @@ public class Room {
         membersById.put(member.getMemberId(), member);
     }
 
-    public void removeMember(@NotNull RoomMember member) {
-        membersById.remove(member.getMemberId(), member);
+    public boolean containsMemberId(@NotNull String userId) {
+        return membersById.containsKey(userId);
     }
 
-    public @NotNull Set<RoomMember> getMembers() {
-        return new HashSet<>(membersById.values());
+    public @Nullable RoomMember getMemberById(@NotNull String userId) {
+        return membersById.get(userId);
+    }
+
+    public void removeMember(@NotNull RoomMember member) {
+        membersById.remove(member.getMemberId(), member);
     }
 
     public @NotNull Set<RoomMember> getMembersWithPermissions(int permission) {
@@ -51,6 +56,10 @@ public class Room {
         for (RoomMember member : members) {
             membersById.put(member.getMemberId(), member);
         }
+    }
+
+    public @NotNull Set<RoomMember> getMembers() {
+        return new HashSet<>(membersById.values());
     }
 
     public void dispose() {

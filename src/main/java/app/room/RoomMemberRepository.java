@@ -96,10 +96,10 @@ public class RoomMemberRepository {
     }
 
 
-    public List<String> getRoomMembers(int roomId) throws SQLException {
+    public List<RoomMember> getRoomMembers(int roomId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
-                     SELECT user_id FROM room_members WHERE
+                     SELECT user_id, perms FROM room_members WHERE
                      room_id = ?;
                      """)
         ) {
@@ -107,9 +107,11 @@ public class RoomMemberRepository {
 
             ResultSet resultSet = statement.executeQuery();
 
-            List<String> members = new ArrayList<>();
+            List<RoomMember> members = new ArrayList<>();
             while (resultSet.next()) {
-                members.add(resultSet.getString(1));
+                String userId = resultSet.getString("user_id");
+                int perms = resultSet.getInt("perms");
+                members.add(new RoomMember(userId, new Permissions(perms)));
             }
             return members;
         }
@@ -134,7 +136,6 @@ public class RoomMemberRepository {
             return 0;
         }
     }
-
 
     public boolean userInRoom(int roomId, String userId) throws SQLException {
         try (Connection connection = dataSource.getConnection();

@@ -3,6 +3,7 @@ package database;
 import app.config.AppConfig;
 import app.config.Env;
 import app.database.DataSourceFactory;
+import app.room.RoomMember;
 import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
 import org.junit.jupiter.api.*;
@@ -45,12 +46,11 @@ public class RoomMemberRepoTest {
 
     @Test
     void getMemberList() throws SQLException {
-        List<String> membersFull = testRepo.getRoomMembers(fullRoom);
-        List<String> membersEmpty = testRepo.getRoomMembers(emptyRoom);
+        List<RoomMember> membersFull = testRepo.getRoomMembers(fullRoom);
+        List<RoomMember> membersEmpty = testRepo.getRoomMembers(emptyRoom);
 
-        Assertions.assertTrue(membersFull.contains("repo_roomMember"));
-
-        Assertions.assertFalse(membersEmpty.contains("repo_roomMember"));
+        Assertions.assertEquals("repo_roomMember", membersFull.getFirst().getMemberId());
+        Assertions.assertTrue(membersEmpty.isEmpty());
     }
 
     @Test

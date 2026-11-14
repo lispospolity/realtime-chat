@@ -6,10 +6,7 @@ import app.config.Env;
 import app.database.DataSourceFactory;
 import app.dto.response.ErrorResponse;
 import app.dto.response.GenericResponse;
-import app.room.Permissions;
-import app.room.RoomMemberRepository;
-import app.room.RoomRepository;
-import app.room.RoomService;
+import app.room.*;
 import app.room.dto.response.HasPermissionsResponse;
 import app.room.dto.response.RoomMembersResponse;
 import com.zaxxer.hikari.HikariDataSource;
@@ -20,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RoomsTests {
     private final static Path testEnvDir = Paths.get("src/test/resources/.env.db.test");
@@ -48,7 +47,8 @@ public class RoomsTests {
     void setupRoomService() throws SQLException {
         roomRepo = new RoomRepository(dataSource);
         roomMemberRepo = new RoomMemberRepository(dataSource);
-        roomService = new RoomService(roomRepo, roomMemberRepo);
+        RoomRegistry roomRegistry = new RoomRegistry(roomRepo, roomMemberRepo);
+        roomService = new RoomService(roomRepo, roomMemberRepo, roomRegistry);
 
         testingRoom = roomRepo.create(testOwnerNoPerms, System.currentTimeMillis());
         roomMemberRepo.addToRoom(testingRoom, testOwnerNoPerms, 0);
@@ -64,7 +64,7 @@ public class RoomsTests {
         ErrorResponse response = Assertions.assertInstanceOf(ErrorResponse.class, result.response());
 
         Assertions.assertFalse(response.success());
-        Assertions.assertEquals("You do not have the required permissions for this action.", response.error());
+        Assertions.assertEquals("You're not a member of this room.", response.error());
     }
 
     @Test
@@ -150,10 +150,15 @@ public class RoomsTests {
 
         Assertions.assertTrue(response.success());
 
+        List<String> members = new ArrayList<>();
+
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
-        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
-        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+        for (RoomMember member : response.members()) {
+            members.add(member.getMemberId());
+        }
+        Assertions.assertTrue(members.contains(testOwnerNoPerms));
+        Assertions.assertTrue(members.contains(testMemberAllPerms));
+        Assertions.assertTrue(members.contains(testMemberNoPerms));
     }
 
     @Test
@@ -162,12 +167,15 @@ public class RoomsTests {
 
         RoomMembersResponse response = Assertions.assertInstanceOf(RoomMembersResponse.class, result.response());
 
-        Assertions.assertTrue(response.success());
+        List<String> members = new ArrayList<>();
 
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
-        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
-        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+        for (RoomMember member : response.members()) {
+            members.add(member.getMemberId());
+        }
+        Assertions.assertTrue(members.contains(testOwnerNoPerms));
+        Assertions.assertTrue(members.contains(testMemberAllPerms));
+        Assertions.assertTrue(members.contains(testMemberNoPerms));
     }
 
     @Test
@@ -178,10 +186,15 @@ public class RoomsTests {
 
         Assertions.assertTrue(response.success());
 
+        List<String> members = new ArrayList<>();
+
         Assertions.assertFalse(response.members().isEmpty());
-        Assertions.assertTrue(response.members().contains(testOwnerNoPerms));
-        Assertions.assertTrue(response.members().contains(testMemberAllPerms));
-        Assertions.assertTrue(response.members().contains(testMemberNoPerms));
+        for (RoomMember member : response.members()) {
+            members.add(member.getMemberId());
+        }
+        Assertions.assertTrue(members.contains(testOwnerNoPerms));
+        Assertions.assertTrue(members.contains(testMemberAllPerms));
+        Assertions.assertTrue(members.contains(testMemberNoPerms));
     }
 
     @Test
