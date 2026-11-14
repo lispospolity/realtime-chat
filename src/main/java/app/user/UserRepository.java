@@ -52,9 +52,10 @@ public class UserRepository {
                 """)
         ) {
             statement.setString(1, name);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getString(1);
-            return null;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) return resultSet.getString(1);
+                return null;
+            }
         }
     }
 
@@ -65,9 +66,10 @@ public class UserRepository {
                 """)
         ) {
             statement.setString(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) return resultSet.getString("password");
-            return null;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) return resultSet.getString("password");
+                return null;
+            }
         }
     }
 
@@ -78,10 +80,10 @@ public class UserRepository {
                 """)
         ) {
             statement.setString(1, userId);
-            ResultSet resultSet = statement.executeQuery();
-
-            if (resultSet.next()) return resultSet.getString(1);
-            return null;
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) return resultSet.getString(1);
+                return null;
+            }
         }
     }
 }
