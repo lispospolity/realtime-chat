@@ -149,17 +149,22 @@ public class RoomService {
         if (!success) return permsResult;
 
         try {
-            //TODO RoomRegistry getRoomMember == null? here
-            if (!roomMemberRepo.userInRoom(roomId, existingMemberId)) {
+            Room room = roomRegistry.getRoomById(roomId);
+            if (room == null) {
+                var response = new ErrorResponse(
+                        false,
+                        "This room does not exist.");
+                return new Result(404, response);
+            }
+
+            RoomMember member = roomRegistry.getRoomMember(roomId, existingMemberId);
+            if (member == null) {
                 var response = new ErrorResponse(
                         false,
                         "This member is not in the room.");
                 return new Result(404, response);
             }
-
-            //TODO
-            // new RoomRegistry removeRoomMember method
-            roomMemberRepo.removeFromRoom(roomId, existingMemberId);
+            roomRegistry.removeMember(room, member);
 
             var response = new GenericResponse(
                     true,
