@@ -131,7 +131,7 @@ public class RoomRegistry {
         Room room = getRoomById(roomId);
         if (room == null) return null;
 
-        if (room.amountOfMembers() > 1) return room.getMembers();
+        if (!room.membersCacheExpired()) return room.getMembers();
 
         List<RoomMember> dbMembers = pullRoomMembersFromDatabase(room);
         return overwriteRoomMemberCache(room, dbMembers);

@@ -166,7 +166,7 @@ public class RoomService {
         if (!success) return permsResult;
 
         try {
-            List<RoomMember> members = roomMemberRepo.getRoomMembers(roomId);
+            List<RoomMember> members = roomRegistry.getRoomMembers(roomId);
 
             var response = new RoomMembersResponse(
                     true,
