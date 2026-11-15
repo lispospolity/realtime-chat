@@ -14,6 +14,14 @@ public final class Room {
 
     private final HashMap<String, RoomMember> membersById;
 
+    private static long membersCacheTtlMillis = 300_000L;
+    public static void setCacheExpiryTime(long cacheExpiryTime) {
+        Room.membersCacheTtlMillis = cacheExpiryTime;
+    }
+
+    private long membersCacheExpiresAt = 0;
+    public boolean membersCacheExpired() { return membersCacheExpiresAt < System.currentTimeMillis(); }
+
     public Room(int roomId, @NotNull String creatorId) {
         this.roomId = roomId;
         this.membersById = new HashMap<>();
@@ -57,6 +65,8 @@ public final class Room {
 
         if (ownerObj == null) return;
         membersById.put(owner, ownerObj);
+
+        membersCacheExpiresAt = System.currentTimeMillis() + membersCacheTtlMillis;
     }
 
     public @NotNull List<RoomMember> getMembers() {
