@@ -37,9 +37,9 @@ public final class Room {
         membersById.remove(member.getMemberId(), member);
     }
 
-    public @NotNull Set<RoomMember> getMembersWithPermissions(int permission) {
-        Set<RoomMember> members = getMembers();
-        Set<RoomMember> permitted = new HashSet<>();
+    public @NotNull List<RoomMember> getMembersWithPermissions(int permission) {
+        List<RoomMember> members = getMembers();
+        List<RoomMember> permitted = new ArrayList<>();
 
         for (RoomMember member : members) {
             if (!member.getPermissions().allow(permission)) continue;
@@ -59,8 +59,8 @@ public final class Room {
         membersById.put(owner, ownerObj);
     }
 
-    public @NotNull Set<RoomMember> getMembers() {
-        return new HashSet<>(membersById.values());
+    public @NotNull List<RoomMember> getMembers() {
+        return new ArrayList<>(membersById.values());
     }
 
     public int amountOfMembers() {
