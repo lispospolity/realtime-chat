@@ -31,7 +31,7 @@ public class RoomMember {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof RoomMember that)) return false;
-        return Objects.equals(memberId, that.memberId);
+        return Objects.equals(memberId, that.memberId) && Objects.equals(permissions, that.permissions);
     }
 
     @Override
