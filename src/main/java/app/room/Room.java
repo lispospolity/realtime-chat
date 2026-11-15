@@ -62,6 +62,10 @@ public final class Room {
         return new HashSet<>(membersById.values());
     }
 
+    public int amountOfMembers() {
+        return membersById.size();
+    }
+
     public void dispose() {
         membersById.clear();
     }
