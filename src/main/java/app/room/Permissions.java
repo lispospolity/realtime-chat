@@ -2,6 +2,8 @@ package app.room;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import java.util.Objects;
+
 public class Permissions {
     public static final int MINIMAL = 0;
     public static final int READ_MESSAGES = 1<<0;
@@ -43,5 +45,11 @@ public class Permissions {
 
     private static boolean inBounds(int perms) {
         return perms >= 0 && perms <= getMaxPerms();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Permissions that)) return false;
+        return permissions == that.permissions;
     }
 }
