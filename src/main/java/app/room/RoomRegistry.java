@@ -127,9 +127,22 @@ public class RoomRegistry {
         return new RoomMember(userId, new Permissions(perms));
     }
 
-    public void populateRoomsCache(List<Room> rooms) {
-        for (Room room : rooms) {
-            roomsById.put(room.getRoomId(), room);
-        }
+    public List<RoomMember> getRoomMembers(int roomId) throws SQLException {
+        Room room = getRoomById(roomId);
+        if (room == null) return null;
+
+        if (room.amountOfMembers() > 1) return room.getMembers();
+
+        List<RoomMember> dbMembers = pullRoomMembersFromDatabase(room);
+        return overwriteRoomMemberCache(room, dbMembers);
+    }
+
+    private List<RoomMember> overwriteRoomMemberCache(@NotNull Room room, List<RoomMember> newMemberList) {
+        room.overwriteMembers(newMemberList);
+        return newMemberList;
+    }
+
+    private List<RoomMember> pullRoomMembersFromDatabase(@NotNull Room room) throws SQLException {
+        return roomMemberRepo.getRoomMembers(room.getRoomId());
     }
 }
