@@ -8,4 +8,14 @@ public record UserRoomsResponse(
         boolean success,
         List<Integer> rooms,
         String message
-) implements Response {}
+) implements Response {
+    @Override
+    public boolean getSuccess() {
+        return success();
+    }
+
+    @Override
+    public String getMessage() {
+        return message();
+    }
+}

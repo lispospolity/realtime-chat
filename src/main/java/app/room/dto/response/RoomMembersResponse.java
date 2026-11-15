@@ -9,4 +9,14 @@ public record RoomMembersResponse(
         boolean success,
         List<RoomMember> members,
         String message
-) implements Response {}
+) implements Response {
+    @Override
+    public boolean getSuccess() {
+        return success();
+    }
+
+    @Override
+    public String getMessage() {
+        return message();
+    }
+}

@@ -7,4 +7,14 @@ public record UsernameByIdResponse(
         boolean success,
         @NotNull String username,
         String message
-) implements Response {}
+) implements Response {
+    @Override
+    public boolean getSuccess() {
+        return success();
+    }
+
+    @Override
+    public String getMessage() {
+        return message();
+    }
+}

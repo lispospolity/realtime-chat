@@ -10,4 +10,14 @@ public record HasPermissionsResponse(
         @NotNull Room room,
         @NotNull Permissions userPerms,
         String message
-) implements Response {}
+) implements Response {
+    @Override
+    public boolean getSuccess() {
+        return success();
+    }
+
+    @Override
+    public String getMessage() {
+        return message();
+    }
+}
