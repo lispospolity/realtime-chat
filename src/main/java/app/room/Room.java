@@ -3,10 +3,7 @@ package app.room;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public final class Room {
     private final int roomId;
@@ -51,11 +48,15 @@ public final class Room {
         return permitted;
     }
 
-    public void populateMembers(@NotNull Set<RoomMember> members) {
+    public void overwriteMembers(@NotNull List<RoomMember> members) {
+        RoomMember ownerObj = getMemberById(owner);
         membersById.clear();
         for (RoomMember member : members) {
             membersById.put(member.getMemberId(), member);
         }
+
+        if (ownerObj == null) return;
+        membersById.put(owner, ownerObj);
     }
 
     public @NotNull Set<RoomMember> getMembers() {
