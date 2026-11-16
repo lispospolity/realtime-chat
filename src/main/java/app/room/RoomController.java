@@ -65,7 +65,9 @@ public class RoomController {
     }
 
     @PostMapping("/api/rooms")
-    public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken) {
+    public ResponseEntity<?> createRoom(@CookieValue(name = "session_token", required = false) String sessionToken,
+                                        @RequestParam(name = "e2ee", defaultValue = "false") boolean e2ee
+    ) {
         Result authResult = authService.authenticate(sessionToken);
         if (!(authResult.response() instanceof AuthenticationResponse authResponse) || !authResponse.success()) {
             return ResponseEntity
@@ -74,7 +76,7 @@ public class RoomController {
         }
         String userId = authResponse.session().getUserId();
 
-        Result roomResult = roomService.createRoom(userId);
+        Result roomResult = roomService.createRoom(userId, e2ee);
         return ResponseEntity
                 .status(roomResult.httpCode())
                 .body(roomResult.response());

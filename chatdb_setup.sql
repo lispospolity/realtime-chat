@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS chat.rooms(
     room_id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     created_by VARCHAR(36) NOT NULL,
     created_at BIGINT      NOT NULL,
+    e2ee       BOOLEAN     NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_createdby_rooms_user
         FOREIGN KEY (created_by) REFERENCES chat.users(id)
 );
@@ -94,6 +95,7 @@ CREATE TABLE IF NOT EXISTS chat_test.rooms(
     room_id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     created_by VARCHAR(36) NOT NULL,
     created_at BIGINT      NOT NULL,
+    e2ee       BOOLEAN     NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_test_createdby_rooms_user
         FOREIGN KEY (created_by) REFERENCES chat_test.users(id)
 );

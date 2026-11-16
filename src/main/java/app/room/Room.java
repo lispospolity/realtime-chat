@@ -12,6 +12,9 @@ public final class Room {
     private final String owner;
     public String getOwner() { return owner; }
 
+    private final boolean e2ee;
+    public boolean getE2ee() { return e2ee; }
+
     private final HashMap<String, RoomMember> membersById;
 
     private static long membersCacheTtlMillis = 300_000L;
@@ -22,10 +25,11 @@ public final class Room {
     private long membersCacheExpiresAt = 0;
     public boolean membersCacheExpired() { return membersCacheExpiresAt < System.currentTimeMillis(); }
 
-    public Room(int roomId, @NotNull String creatorId) {
+    public Room(int roomId, @NotNull String creatorId, boolean e2ee) {
         this.roomId = roomId;
         this.membersById = new HashMap<>();
         this.owner = creatorId;
+        this.e2ee = e2ee;
         membersById.put(creatorId, RoomMember.createOwner(creatorId));
     }
 

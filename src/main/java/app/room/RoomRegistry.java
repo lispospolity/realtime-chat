@@ -23,11 +23,11 @@ public class RoomRegistry {
         roomsWithOwnerId = new HashMap<>();
     }
 
-    public int createRoom(String requesterId) throws SQLException {
-        int roomId = roomRepo.create(requesterId, System.currentTimeMillis());
+    public int createRoom(String requesterId, boolean e2ee) throws SQLException {
+        int roomId = roomRepo.create(requesterId, System.currentTimeMillis(), e2ee);
         roomMemberRepo.addToRoom(roomId, requesterId, Permissions.getMaxPerms());
 
-        cacheNewRoom(roomId, requesterId);
+        cacheNewRoom(roomId, requesterId, e2ee);
         return roomId;
     }
 
@@ -81,11 +81,18 @@ public class RoomRegistry {
         Room dbRoom = pullRoomFromDatabase(roomId);
         if (dbRoom == null) return null;
 
-        return cacheNewRoom(roomId, dbRoom.getOwner());
+        return cacheRoom(dbRoom);
     }
 
-    private @NotNull Room cacheNewRoom(int roomId, String owner) {
-        Room newRoomObj = new Room(roomId, owner);
+    private @NotNull Room cacheRoom(Room room) {
+        roomsById.put(room.getRoomId(), room);
+        roomsWithOwnerId.put(room, room.getOwner());
+
+        return room;
+    }
+
+    private @NotNull Room cacheNewRoom(int roomId, String owner, boolean e2ee) {
+        Room newRoomObj = new Room(roomId, owner, e2ee);
         roomsById.put(roomId, newRoomObj);
         roomsWithOwnerId.put(newRoomObj, owner);
 
@@ -93,10 +100,7 @@ public class RoomRegistry {
     }
 
     private @Nullable Room pullRoomFromDatabase(@NotNull int roomId) throws SQLException {
-        String owner = roomRepo.getOwner(roomId);
-        if (owner == null) return null;
-
-        return new Room(roomId, owner);
+        return roomRepo.getRoom(roomId);
     }
 
     /**

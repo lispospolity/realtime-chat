@@ -29,10 +29,10 @@ public class RoomService {
      * 1. rooms (obviously),
      * 2. room_members as a member with all privileges
      */
-    public Result createRoom(@NotNull String requesterId) {
+    public Result createRoom(@NotNull String requesterId, boolean e2ee) {
         int roomId;
         try {
-            roomId = roomRegistry.createRoom(requesterId);
+            roomId = roomRegistry.createRoom(requesterId, e2ee);
         } catch (SQLException ex) { return serverError(ex); }
 
         var response = new CreateRoomResponse(
