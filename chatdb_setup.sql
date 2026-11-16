@@ -54,6 +54,20 @@ CREATE TABLE IF NOT EXISTS chat.room_members(
     PRIMARY KEY (room_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS chat.messages(
+    message_id  VARCHAR(36)   NOT NULL,
+    room_id     INT UNSIGNED  NOT NULL,
+    sent_by     VARCHAR(36)   NOT NULL,
+    content     VARCHAR(4000) NOT NULL,
+    sent_at     BIGINT        NOT NULL,
+    CONSTRAINT fk_message_room_id_rooms
+        FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_sent_by_id_users
+        FOREIGN KEY (user_id) REFERENCES chat.users(id),
+    PRIMARY KEY (message_id)
+);
+
 CREATE TABLE IF NOT EXISTS chat_test.users (
     id        VARCHAR(36)  NOT NULL PRIMARY KEY,
     username  VARCHAR(30)  NOT NULL,
@@ -95,6 +109,20 @@ CREATE TABLE IF NOT EXISTS chat_test.room_members(
         FOREIGN KEY (user_id) REFERENCES chat_test.users(id)
         ON DELETE CASCADE,
     PRIMARY KEY (room_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS chat_test.messages(
+    message_id  VARCHAR(36)   NOT NULL,
+    room_id     INT UNSIGNED  NOT NULL,
+    sent_by     VARCHAR(36)   NOT NULL,
+    content     VARCHAR(4000) NOT NULL,
+    sent_at     BIGINT        NOT NULL,
+    CONSTRAINT fk_test_message_room_id_rooms
+        FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_test_sent_by_id_users
+        FOREIGN KEY (user_id) REFERENCES chat.users(id),
+    PRIMARY KEY (message_id)
 );
 
 -- 3. Insert test users into chat_test.users and chat_test.user_sessions
