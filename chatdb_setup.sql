@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS chat.messages(
         FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_sent_by_id_users
-        FOREIGN KEY (user_id) REFERENCES chat.users(id),
+        FOREIGN KEY (sent_by) REFERENCES chat.users(id),
     PRIMARY KEY (message_id)
 );
 
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS chat_test.messages(
         FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_test_sent_by_id_users
-        FOREIGN KEY (user_id) REFERENCES chat.users(id),
+        FOREIGN KEY (sent_by) REFERENCES chat.users(id),
     PRIMARY KEY (message_id)
 );
 
