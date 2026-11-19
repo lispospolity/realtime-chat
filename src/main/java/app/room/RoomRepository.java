@@ -65,18 +65,6 @@ public class RoomRepository {
         }
     }
 
-    public void deleteRoom(int roomId) throws SQLException {
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement("""
-                     DELETE FROM rooms WHERE room_id = ?;
-                     """)
-        ) {
-            statement.setInt(1, roomId);
-
-            statement.executeUpdate();
-        }
-    }
-
     public @Nullable String getOwner(int roomId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
@@ -115,23 +103,17 @@ public class RoomRepository {
         }
     }
 
-    /**
-     * Will not call a query when roomId is negative, because roomId in the database is an unsigned bit.
-     */
-    public boolean roomExists(int roomId) throws SQLException {
-        if (roomId < 0) return false;
-
+    public void deleteRoom(int roomId) throws SQLException {
         try (Connection connection = dataSource.getConnection();
              PreparedStatement statement = connection.prepareStatement("""
-                     SELECT room_id FROM rooms WHERE
-                     room_id = ?;
+                     DELETE FROM rooms WHERE room_id = ?;
                      """)
         ) {
             statement.setInt(1, roomId);
 
-            try (ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next();
-            }
+            statement.executeUpdate();
         }
     }
+
+
 }
