@@ -120,10 +120,10 @@ CREATE TABLE IF NOT EXISTS chat_test.messages(
     content     VARCHAR(4000) NOT NULL,
     sent_at     BIGINT        NOT NULL,
     CONSTRAINT fk_test_message_room_id_rooms
-        FOREIGN KEY (room_id) REFERENCES chat.rooms(room_id)
+        FOREIGN KEY (room_id) REFERENCES chat_test.rooms(room_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_test_sent_by_id_users
-        FOREIGN KEY (sent_by) REFERENCES chat.users(id),
+        FOREIGN KEY (sent_by) REFERENCES chat_test.users(id),
     PRIMARY KEY (message_id)
 );
 
