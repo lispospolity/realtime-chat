@@ -95,6 +95,38 @@ public class MessageRepoTests {
                 ));
     }
 
+    @Test
+    void createMessage_nonexistentUser() {
+        newMessage = new Message(roomId, "nonexistent_user", "test message");
+
+        Assertions.assertThrows(
+                SQLIntegrityConstraintViolationException.class,
+                () -> messageRepo.create(
+                        newMessage.getMessageId(),
+                        newMessage.getRoomId(),
+                        newMessage.getSenderId(),
+                        newMessage.getContent(),
+                        newMessage.getServerReceivedAt()
+                )
+        );
+    }
+
+    @Test
+    void createMessage_nonexistentRoom() {
+        newMessage = new Message(0, userId, "test message");
+
+        Assertions.assertThrows(
+                SQLIntegrityConstraintViolationException.class,
+                () -> messageRepo.create(
+                        newMessage.getMessageId(),
+                        newMessage.getRoomId(),
+                        newMessage.getSenderId(),
+                        newMessage.getContent(),
+                        newMessage.getServerReceivedAt()
+                )
+        );
+    }
+
     @AfterEach
     void cleanupTable() throws SQLException {
         deleteMessages();
