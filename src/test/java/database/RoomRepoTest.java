@@ -84,6 +84,11 @@ public class RoomRepoTest {
     }
 
     @Test
+    void getRoom_negativeId() throws SQLException {
+        Assertions.assertNull(testRepo.getRoom(-1));
+    }
+
+    @Test
     void getOwner() throws SQLException {
         Assertions.assertEquals("repo_testId", testRepo.getOwner(emptyRoom));
     }
