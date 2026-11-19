@@ -6,6 +6,7 @@ import app.database.DataSourceFactory;
 import app.room.RoomMember;
 import app.room.RoomMemberRepository;
 import app.room.RoomRepository;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.*;
 
 import javax.sql.DataSource;
@@ -107,5 +108,10 @@ public class RoomMemberRepoTest {
     void cleanup() throws SQLException {
         roomRepo.deleteRoom(emptyRoom);
         roomRepo.deleteRoom(fullRoom);
+    }
+
+    @AfterAll
+    static void closeDataSource() {
+        if (dataSource instanceof HikariDataSource hds) hds.close();
     }
 }
